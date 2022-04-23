@@ -15,6 +15,53 @@
 
 using namespace std;
 
+bool strfind (string inputString, string targetString) {
+
+    int index = 0;
+
+    for (int i = 0; i < inputString.length (); i++) {
+        if (inputString[i] == targetString[index]) {
+            if (index == targetString.length () - 1) {
+                return true;
+            } else {
+                index++;
+                continue;
+            }
+        } else {
+            if (index != 0) {
+                index = 0;
+                continue;
+            }
+        }
+    }
+
+    return false;
+}
+
+string getNumericalValue (string inputString) {
+    string number = "";
+    for (int i = 0; i < inputString.length (); i++) {
+        if (
+            inputString[i]  >= '0' || 
+            inputString[i] <=  '9' || 
+            inputString[i] == '-'
+        ) {
+            number += inputString[i];
+        }
+    }
+    return number;
+}
+
+float processMagnitude (string inputValue, float relativeMagnitude = 1) {
+    if (strfind (inputValue, "%")) {
+        float value = float (stoi (getNumericalValue (inputValue))) / 100;
+        return value * relativeMagnitude;
+    } else if (strfind (inputValue, "px")) {
+        return stoi (getNumericalValue (inputValue));
+    }
+    return -1;
+}
+
 class windowData {
 
     public:
@@ -180,22 +227,61 @@ class FillData {
 class Coordinate {
     
     private:
-        int x, y;
+        string x, y;
 
     public:
 
         Coordinate () {
-            this->x = 0;
-            this->y = 0;
+            this->x = "0px";
+            this->y = "0px";
         }
 
         Coordinate (int x, int y) {
+            this->x = to_string (x) + "px";
+            this->y = to_string (y) + "px";
+        }
+
+        Coordinate (string x, string y) {
             this->x = x;
             this->y = y;
         }
 
-        int getX () { return x; }
-        int getY () { return y; }
+        int getX () { 
+            return processMagnitude (x, windowData::width);
+        }
+
+        int getY () { 
+            return processMagnitude (y, windowData::height);
+        }
+
+};
+
+class Dimensions {
+
+    private:
+
+        string width;
+        string height;
+
+    public:
+
+        Dimensions () {
+            this->width = "0px";
+            this->height = "0px";
+        }
+
+        Dimensions (string width, string height) {
+            this->width = width;
+            this->height = height;
+        }
+
+        float getWidth () {
+            return processMagnitude (width, windowData::width);
+        }
+
+        float getHeight () {
+            return processMagnitude (height, windowData::height);
+        }
 
 };
 
@@ -298,45 +384,55 @@ class Path {
 
 };
 
-class Shape {
+class Shape { 
 
-    protected:
-    
-        float top,
-              left,
+    private:
 
-              width,
-              height,
+        int z_index;
 
-              originX,
-              originY;
+    public:
+
+        void set_z_index (int z_index) {
+            this->z_index = z_index;
+        }
+
+        virtual bool isPointInsideShape (int x, int y) {
+            cout << "Shape: Empty Method Called" << endl;
+            return false;
+        }
+
+};
+
+class Rectangle : Shape {
+
+    private:
+
+        Coordinate position;
+        Dimensions dimensions;
+
+        float originX;
+        float originY;
 
         StrokeData stroke;
         FillData fill;
 
     public:
 
-        Shape (
-
-            float top, 
-            float left, 
-
-            float width, 
-            float height, 
-
-            float originX, 
-            float originY, 
+        Rectangle (
             
-            StrokeData stroke = StrokeData (),
-            FillData fill = FillData ()
+            Coordinate position,
+            Dimensions dimensions,
+
+            float originX,
+            float originY,
+
+            StrokeData stroke,
+            FillData fill
 
         ) {
 
-            this->top = top;
-            this->left = left;
-
-            this->width = width;
-            this->height = height;
+            this->position = position;
+            this->dimensions = dimensions;
 
             this->originX = originX;
             this->originY = originY;
@@ -346,61 +442,17 @@ class Shape {
 
         }
 
-};
-
-
-class Rectangle : Shape {
-
-    public:
-
-        Rectangle (
-
-            float top, 
-            float left, 
-
-            float width, 
-            float height, 
-
-            float originX, 
-            float originY, 
-            
-            StrokeData stroke = StrokeData (),
-            FillData fill = FillData ()
-
-        ) : Shape (top, left, width, height, originX, originY, stroke, fill) {
-            cout << "Rectangle Created" << endl;
-        } 
-
         void draw (const Cairo::RefPtr<Cairo::Context>& context) {
 
-            float positionX, positionY;
-            float sizeX, sizeY;
+            context->rectangle (
 
-            if (width <= 1) {
-                sizeX = width * windowData::width;
-            } else {
-                sizeX = width;
-            }
+                position.getX () - (originX * windowData::width), 
+                position.getY () - (originY * windowData::height), 
 
-            if (height <= 1) {
-                sizeY = height * windowData::height;
-            } else {
-                sizeY = height;
-            }
+                dimensions.getWidth (), 
+                dimensions.getHeight ()
 
-            if (top <= 1) {
-                positionY = (top * windowData::height) - (originY * sizeY);
-            } else {
-                positionY = top - (originY * sizeY);
-            }
-
-            if (left <= 1) {
-                positionX = (left * windowData::width) - (originX * sizeX);
-            } else {
-                positionX = left - (originX * sizeX);
-            }
-
-            context->rectangle (positionX, positionY, sizeX, sizeY);            
+            );            
 
             if (!fill.isNull ()) {
                 context->set_source_rgba (
@@ -425,43 +477,158 @@ class Rectangle : Shape {
             
         }
 
+        bool isPointInsideShape (int x, int y) {
+
+            float pivotX = (originX * windowData::width);
+            float pivotY = (originY * windowData::height);
+
+            if (
+                (position.getX () - pivotX) <= x && x <= (position.getX () + dimensions.getWidth () - pivotX)
+                    &&
+                (position.getY () - pivotY) <= y && y <= (position.getY () + dimensions.getHeight () - pivotY) 
+            ) {
+                return true;
+            }
+
+            return false;
+        }
+
+        void setFillData (FillData fill) {
+            this->fill = fill;
+        }
+
 };
 
+bool ccw (Coordinate a, Coordinate b, Coordinate c) {
+    return ((c.getY () - a.getY ()) * (b.getX () - a.getX ())) > ((b.getY () - a.getY ()) * (c.getX () - a.getX ()));
+}
 
-Rectangle rect_1 (0.5, 0.5, 0.5, 0.5, 0.5, 0.5, StrokeData (5, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
-Line someLine (Coordinate (100, 100), Coordinate (120, 50), StrokeData (5, Color32 (0, 0, 0, 1)));
-Path newPath ({Coordinate (1, 1)}, StrokeData (5, Color32 (0, 0, 0, 1)));
+bool intersect (Coordinate a, Coordinate b, Coordinate c, Coordinate d) {
+    return ccw (a, c, d) != ccw (b, c, d) && ccw (a, b, c) != ccw (a, b, d);
+}
+
+class Polygon : Shape {
+
+    private:
+
+        vector<Coordinate> vertices;
+
+        StrokeData stroke;
+        FillData fill;
+
+    public:
+
+        Polygon (vector<Coordinate> vertices, StrokeData stroke, FillData fill) {
+            this->vertices = vertices;
+            this->stroke = stroke;
+            this->fill = fill;
+        }
+
+        void draw (const Cairo::RefPtr<Cairo::Context>& context) {
+
+            context->move_to (vertices[0].getX (), vertices[0].getY ());
+
+            for (int i = 1; i < vertices.size (); i++) {
+                context->line_to (vertices[i].getX(), vertices[i].getY ());
+            }
+
+            context->line_to (vertices[0].getX (), vertices[0].getY ());
+
+            context->stroke_preserve ();
+
+            if (!fill.isNull ()) {
+                context->set_source_rgba (
+                    fill.getColor ().r (),
+                    fill.getColor ().g (),
+                    fill.getColor ().b (),
+                    fill.getColor ().a ()
+                );
+                context->fill ();
+            }
+
+        }
+
+        bool isPointInsideShape (int x, int y) {
+
+            int intersection = 0;
+
+            for (int i = 0; i < 3; i++) {
+
+                if (
+                    intersect (Coordinate (0, 0), Coordinate (x, y), Coordinate (vertices[i].getX (), vertices[i].getY ()), Coordinate (vertices[(i + 1) % vertices.size ()].getX (), vertices[(i + 1) % vertices.size ()].getY ()))
+                ) {
+                    intersection++;
+                }
+
+                cout << intersection << endl;
+
+            }
+
+            return intersection % 2 != 0;
+        }
+
+        void setFillData (FillData fill) {
+            this->fill = fill;
+        }
+
+};
+
+Rectangle r1 (Coordinate ("100px", "100px"), Dimensions ("10%", "10%"), 0, 0, StrokeData (1, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
+Polygon t1 ({Coordinate ("200px", "200px"), Coordinate ("200px", "400px"), Coordinate ("250px", "100px")}, StrokeData (5, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
+
+void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
+    windowData::updateWindowSizeData (width, height);
+
+    // onDraw Stuff
+    r1.draw (cr);
+    t1.draw (cr);
+}
+
+////////////////////////////////////////////////////////////////////////
+// EVENTS /////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
 
 bool mainWindow::onKeyPress (guint keyval, guint keycode, Gdk::ModifierType state) {
+    // On Key Press Stuff
     return true;
 }
 
 void mainWindow::onKeyRelease (guint keyval, guint keycode, Gdk::ModifierType state) {
-}
-
-void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
-    windowData::updateWindowSizeData (width, height);
-    //rect_1.draw (cr);
-    //someLine.draw (cr);
-    newPath.draw (cr);
+    // On Key Release Stuff
 }
 
 void Canvas::onMouseMove (double x, double y) {
-    //someLine.setEnd (Coordinate (x, y));
+    // On Mouse Move Stuff
+    if (r1.isPointInsideShape (x, y)) {
+        r1.setFillData (FillData (Color32 (0, 1, 0, 1)));
+    } else {
+        r1.setFillData (FillData (Color32 (1, 0, 0, 1)));
+    }
+
+    if (t1.isPointInsideShape (x, y)) {
+        t1.setFillData (FillData (Color32 (0, 1, 0, 1)));
+    } else {
+        t1.setFillData (FillData (Color32 (1, 0, 0, 1)));
+    }
+
     queue_draw ();
 }
 
 void onMouseClick (Canvas& canvas,int clicks, double x, double y) {
-    newPath.addPoint (Coordinate (x, y));
-    canvas.queue_draw ();
+    // On Mouse Click Stuff
 }
 
 void Canvas::onMouseDown (int n_press, double x, double y) {
-    onMouseClick (*this, n_press, x, y);
+    // On Mouse Down
 }
 
 void Canvas::onMouseUp (int n_press, double x, double y) {
+    // On Mouse Up
 }
+
+////////////////////////////////////////////////////////////////////////
+// MAIN ///////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
 
 int main(int argc, char** argv)
 {
