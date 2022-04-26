@@ -389,21 +389,47 @@ class Shape {
     private:
 
         int z_index;
+        string type;
 
     public:
+
+        static int indices;
+        static vector<Shape*> CreatedShapes;
+
+        Shape () {
+            this->z_index = indices;
+            cout << indices << endl;
+            indices++;
+        }
+
+        Shape (int z_index, int change = 0) {
+            this->z_index = z_index;
+            indices += change;
+        }
+
+        int get_z_index () {
+            return z_index;
+        }
 
         void set_z_index (int z_index) {
             this->z_index = z_index;
         }
 
         virtual bool isPointInsideShape (int x, int y) {
-            cout << "Shape: Empty Method Called" << endl;
+            cout << "Shape: Empty Method Called => isPointInsideShape ()" << endl;
             return false;
+        }
+
+        virtual string getType () {
+            return "None";
         }
 
 };
 
-class Rectangle : Shape {
+int Shape::indices = 0;
+vector<Shape*> Shape::CreatedShapes {};
+
+class Rectangle : public Shape {
 
     private:
 
@@ -440,6 +466,8 @@ class Rectangle : Shape {
             this->stroke = stroke;
             this->fill = fill;
 
+            Shape::CreatedShapes.push_back (this);
+
         }
 
         void draw (const Cairo::RefPtr<Cairo::Context>& context) {
@@ -451,7 +479,6 @@ class Rectangle : Shape {
 
                 dimensions.getWidth (), 
                 dimensions.getHeight ()
-
             );            
 
             if (!fill.isNull ()) {
@@ -497,6 +524,10 @@ class Rectangle : Shape {
             this->fill = fill;
         }
 
+        string getType () {
+            return "Rectangle";
+        }
+
 };
 
 bool ccw (Coordinate a, Coordinate b, Coordinate c) {
@@ -507,7 +538,7 @@ bool intersect (Coordinate a, Coordinate b, Coordinate c, Coordinate d) {
     return ccw (a, c, d) != ccw (b, c, d) && ccw (a, b, c) != ccw (a, b, d);
 }
 
-class Polygon : Shape {
+class Polygon : public Shape {
 
     private:
 
@@ -522,6 +553,8 @@ class Polygon : Shape {
             this->vertices = vertices;
             this->stroke = stroke;
             this->fill = fill;
+
+            Shape::CreatedShapes.push_back (this);
         }
 
         void draw (const Cairo::RefPtr<Cairo::Context>& context) {
@@ -553,15 +586,13 @@ class Polygon : Shape {
             int intersection = 0;
 
             for (int i = 0; i < 3; i++) {
-
-                if (
+                if 
+                (
                     intersect (Coordinate (0, 0), Coordinate (x, y), Coordinate (vertices[i].getX (), vertices[i].getY ()), Coordinate (vertices[(i + 1) % vertices.size ()].getX (), vertices[(i + 1) % vertices.size ()].getY ()))
-                ) {
-                    intersection++;
+                ) 
+                { 
+                    intersection++; 
                 }
-
-                cout << intersection << endl;
-
             }
 
             return intersection % 2 != 0;
@@ -571,9 +602,13 @@ class Polygon : Shape {
             this->fill = fill;
         }
 
+        string getType () {
+            return "Polygon";
+        }
+
 };
 
-Rectangle r1 (Coordinate ("100px", "100px"), Dimensions ("10%", "10%"), 0, 0, StrokeData (1, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
+Rectangle r1 (Coordinate ("100px", "100px"), Dimensions ("30%", "30%"), 0, 0, StrokeData (1, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
 Polygon t1 ({Coordinate ("200px", "200px"), Coordinate ("200px", "400px"), Coordinate ("250px", "100px")}, StrokeData (5, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
 
 void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
@@ -588,6 +623,10 @@ void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int hei
 // EVENTS /////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
 
+void onShapeClick (Shape shape) {
+    cout << "Shape Clicked: " << shape.getType () << endl;
+}
+
 bool mainWindow::onKeyPress (guint keyval, guint keycode, Gdk::ModifierType state) {
     // On Key Press Stuff
     return true;
@@ -599,6 +638,7 @@ void mainWindow::onKeyRelease (guint keyval, guint keycode, Gdk::ModifierType st
 
 void Canvas::onMouseMove (double x, double y) {
     // On Mouse Move Stuff
+    /*
     if (r1.isPointInsideShape (x, y)) {
         r1.setFillData (FillData (Color32 (0, 1, 0, 1)));
     } else {
@@ -610,15 +650,33 @@ void Canvas::onMouseMove (double x, double y) {
     } else {
         t1.setFillData (FillData (Color32 (1, 0, 0, 1)));
     }
-
+    */
     queue_draw ();
 }
 
-void onMouseClick (Canvas& canvas,int clicks, double x, double y) {
+void onMouseClick (Canvas& canvas, int clicks, double x, double y) {
     // On Mouse Click Stuff
+    int max = -1;
+    for (int i = 0; i < Shape::CreatedShapes.size (); i++) {
+        if (Shape::CreatedShapes[i]->isPointInsideShape (x, y)) {
+            if (max == -1) { 
+                max = i; 
+            } else {
+                if (Shape::CreatedShapes[i]->get_z_index() > 
+                    Shape::CreatedShapes[max]->get_z_index ()) {
+                    max = i;
+                }
+            }
+        }
+    }
+    if (max != -1) {
+        cout << Shape::CreatedShapes[max]->getType () << endl;
+        //onShapeClick (*Shape::CreatedShapes[max]);
+    }
 }
 
 void Canvas::onMouseDown (int n_press, double x, double y) {
+    onMouseClick (*this, n_press, x, y);
     // On Mouse Down
 }
 
