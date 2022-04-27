@@ -608,6 +608,67 @@ class Polygon : public Shape {
 
 };
 
+class Arc {
+
+    private:
+
+        Coordinate position;
+
+        float radius;
+
+        float startAngle;
+        float endAngle;
+
+        StrokeData stroke;
+        FillData fill;
+
+
+    public:
+
+        Arc (Coordinate position, float radius, float startAngle, float endAngle, StrokeData stroke, FillData fill) {
+            this->position = position;
+
+            this->radius = radius;
+
+            this->startAngle = startAngle;
+            this->endAngle = endAngle;
+
+            this->stroke = stroke;
+            this->fill = fill;
+        }
+
+        void draw (const Cairo::RefPtr<Cairo::Context>& context) {
+        
+            context->arc (position.getX (), position.getY (), radius, startAngle, endAngle);
+
+
+            // Not sure if we should support fill in this class
+            // we'll see in the end what works best, ok.
+            if (!fill.isNull ()) {
+                context->set_source_rgba (
+                    fill.getColor ().r (),
+                    fill.getColor ().g (),
+                    fill.getColor ().b (),
+                    fill.getColor ().a ()
+                );
+                context->fill_preserve ();
+            }
+
+            if (!stroke.isNull ()) {
+                context->set_source_rgba (
+                    stroke.getColor ().r (),
+                    stroke.getColor ().g (),
+                    stroke.getColor ().b (),
+                    stroke.getColor ().a ()
+                );
+                context->set_line_width (stroke.getWidth ());
+                context->stroke ();
+            }
+
+        }
+
+};
+
 Rectangle r1 (Coordinate ("100px", "100px"), Dimensions ("30%", "30%"), 0, 0, StrokeData (1, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
 Polygon t1 ({Coordinate ("200px", "200px"), Coordinate ("200px", "400px"), Coordinate ("250px", "100px")}, StrokeData (5, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
 
