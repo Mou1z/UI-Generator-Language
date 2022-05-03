@@ -2,11 +2,10 @@
 
 > TODO
 
-1. Make a constructor in Color32 that takes in a string value that represents a HEX color code (#RRGGBBAA), and converts it into RGBA, finally storing the values in the relevant members.
-
 */
 
 #include <iostream>
+#include<string>
 #include <vector>
 
 // Drawing Libraries
@@ -157,6 +156,21 @@ class Color32 {
             this->green = green;
             this->blue = blue;
             this->alpha = alpha;
+        }
+    
+        // To accept hex colour code and convert to rgba
+        Color32 (string hex, bool a = true) {
+            this->red = stoi (hex.substr(1,2), 0, 16);
+            this->green = stoi (hex.substr(3,2), 0, 16);
+            this->blue = stoi (hex.substr(5,2), 0, 16);
+
+            if (a) {
+                this->alpha = stoi (hex.substr(7,2), 0, 16);
+            }
+            else {
+                this->alpha = 0;
+            }
+
         }
 
         // To make them read-only.
