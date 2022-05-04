@@ -1,11 +1,24 @@
 /*
 
 > TODO
+    - Image Class
+    - Text Class
+
+-> Long Term
+    - Ability to set parents for elements.
+    - Animations (this depends upon the previous thing)
+    - Variables
+    - Conditionals
+    - Extra Elements
+        > Button
+        > Input Field
+        > Dropdown (It will be a pain to make this one, I won't bother making this. Mentioning it anyways)
+        >
 
 */
 
 #include <iostream>
-#include<string>
+#include <string>
 #include <vector>
 
 // Drawing Libraries
@@ -135,7 +148,7 @@ mainWindow::mainWindow () {
 
 }
 
-// 32-Bit Color (#RRGGBBAA in HEX form)
+// 32-Bit Color (#RRGGBB[AA] in HEX form)
 class Color32 {
 
     private:
@@ -157,19 +170,26 @@ class Color32 {
             this->blue = blue;
             this->alpha = alpha;
         }
-    
-        // To accept hex colour code and convert to rgba
-        Color32 (string hex, bool a = true) {
-            this->red = stoi (hex.substr(1,2), 0, 16);
-            this->green = stoi (hex.substr(3,2), 0, 16);
-            this->blue = stoi (hex.substr(5,2), 0, 16);
 
-            if (a) {
-                this->alpha = stoi (hex.substr(7,2), 0, 16);
-            }
-            else {
-                this->alpha = 0;
-            }
+        // Some fixes and changes.
+        // The values should be between 0-1 not 0-255, so we need to 'normalize' the converted hex to something between 0-1 by using the percentage formula.
+        // We normally want to set the alpha value to maximum if it's not mentioned so that the color is visible with maximum opacity, it is for convenience. Most of the systems follow this convention.
+        // I got rid of the extra parameter since we won't be needing it in this case, it will only slow thing down (It was only convenient in that javascript code because of some specific reasons). 
+        // The constructor checks the string size and determines if 'alpha' is included or not - if not then alpha is set to 1.0f by default.
+        Color32 (string hex) {
+            
+            this->red = 
+                (float (stoi (hex.substr(1,2), 0, 16)) / 255.0f);
+
+            this->green = 
+                (float (stoi (hex.substr(3,2), 0, 16)) / 255.0f);
+
+            this->blue = 
+                (float (stoi (hex.substr(5,2), 0, 16)) / 255.0f);
+
+            this->alpha = 
+                hex.size () == 9 ? 
+                    (float (stoi (hex.substr(7,2), 0, 16)) / 255.0f) : (1.0f);
 
         }
 
@@ -655,9 +675,6 @@ class Arc {
         
             context->arc (position.getX (), position.getY (), radius, startAngle, endAngle);
 
-
-            // Not sure if we should support fill in this class
-            // we'll see in the end what works best, ok.
             if (!fill.isNull ()) {
                 context->set_source_rgba (
                     fill.getColor ().r (),
@@ -686,47 +703,69 @@ class Arc {
 Rectangle r1 (Coordinate ("100px", "100px"), Dimensions ("30%", "30%"), 0, 0, StrokeData (1, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
 Polygon t1 ({Coordinate ("200px", "200px"), Coordinate ("200px", "400px"), Coordinate ("250px", "100px")}, StrokeData (5, Color32 (0, 0, 0, 1)), FillData (Color32 (1, 0, 0, 1)));
 
+//Color32 Red ("#FF0000");
+//Color32 tRed ("#FF0000AA");
+
 void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
     windowData::updateWindowSizeData (width, height);
 
     // onDraw Stuff
     r1.draw (cr);
     t1.draw (cr);
+
+    //cout << Red.r () << " " << Red.g () << " " << Red.b () << " " << Red.a () << endl;
+    //cout << tRed.r () << " " << tRed.g () << " " << tRed.b () << " " << tRed.a () << endl;
+
 }
 
 ////////////////////////////////////////////////////////////////////////
 // EVENTS /////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
 
-void onShapeClick (Shape shape) {
+/*
+
+Supported Events:
+
+    OnShapeClick (Not Completed)
+    OnKeyPress (keycode)
+    OnKeyRelease (keycode)
+    OnMouseMove (click_count, x, y)
+    OnMouseClick (click_count, x, y)
+    OnMouseDown (click_count, x, y)
+    OnMouseUp (click_count, x, y)
+
+*/
+
+void onShapeClick (Canvas& canvas, Shape& shape) {
+    // Notes for myself:
+    // Figure out what the translated code will look like.
+    // Is the cast necessary ? There are just 2 shapes. What about circles ? It's a special case of 'Arc'.
+    // Plus Arc cannot be passed into this function as it's not derived from 'Shape'.
+    // Think of a way to support click detection on circles aswell, if it's too tedius them forget it.
+    /*
     cout << "Shape Clicked: " << shape.getType () << endl;
+    if (shape.getType() == "Rectangle") {
+        Rectangle * rectangle = static_cast<Rectangle*>(&shape);
+        rectangle->setFillData (FillData (Color32 (0, 1, 0, 1)));
+    } else if (shape.getType() == "Polygon") {
+        Polygon * polygon = static_cast<Polygon*>(&shape);
+        
+    }
+    */
+    // {OnShapeClick}
 }
 
 bool mainWindow::onKeyPress (guint keyval, guint keycode, Gdk::ModifierType state) {
-    // On Key Press Stuff
+    // {OnKeyPress}
     return true;
 }
 
 void mainWindow::onKeyRelease (guint keyval, guint keycode, Gdk::ModifierType state) {
-    // On Key Release Stuff
+    // {OnKeyRelease}
 }
 
 void Canvas::onMouseMove (double x, double y) {
-    // On Mouse Move Stuff
-    /*
-    if (r1.isPointInsideShape (x, y)) {
-        r1.setFillData (FillData (Color32 (0, 1, 0, 1)));
-    } else {
-        r1.setFillData (FillData (Color32 (1, 0, 0, 1)));
-    }
-
-    if (t1.isPointInsideShape (x, y)) {
-        t1.setFillData (FillData (Color32 (0, 1, 0, 1)));
-    } else {
-        t1.setFillData (FillData (Color32 (1, 0, 0, 1)));
-    }
-    */
-    queue_draw ();
+    // {OnMouseMove}
 }
 
 void onMouseClick (Canvas& canvas, int clicks, double x, double y) {
@@ -745,18 +784,18 @@ void onMouseClick (Canvas& canvas, int clicks, double x, double y) {
         }
     }
     if (max != -1) {
-        cout << Shape::CreatedShapes[max]->getType () << endl;
-        //onShapeClick (*Shape::CreatedShapes[max]);
+        //cout << Shape::CreatedShapes[max]->getType () << endl;
+        onShapeClick (canvas, *Shape::CreatedShapes[max]);
     }
 }
 
 void Canvas::onMouseDown (int n_press, double x, double y) {
     onMouseClick (*this, n_press, x, y);
-    // On Mouse Down
+    // {OnMouseDown}
 }
 
 void Canvas::onMouseUp (int n_press, double x, double y) {
-    // On Mouse Up
+    // {OnMouseUp}
 }
 
 ////////////////////////////////////////////////////////////////////////
