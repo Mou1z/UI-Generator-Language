@@ -1,3 +1,3 @@
-CREATE `Rectangle` (width = 10%, height = 100, top = 50%, left = 50%, originX = 0.5, originY = 0.5) as `r1`
+CREATE `Rectangle` (height = 100px, width = 15%, top = 50%, stroke_width = 5, left = 50%, origin_x = 0.5, origin_y = 0.5) as `r1`
 UPDATE something
 lol fwefseiojgowe

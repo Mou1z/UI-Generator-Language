@@ -5,8 +5,6 @@
 
 using namespace std;
 
-
-
 enum {
     CREATE,
     UPDATE
@@ -88,42 +86,71 @@ string removeSpaces (string input) {
 
 string argsBaseCode [1] = {
 
-    "(Coordinate (\"{left}\", \"{top}\"}), Dimensions (\"{width}\", \"{height}\"), {origin_x: 0.5}, {origin_y: 0.5}, StrokeData ({stroke_width: 1}, FillColor ({stroke_color: #000000FF})), FillData ({fill_color: #FFFFFF00}))"  
+    "(Coordinate (\"{left}\", \"{top}\"}), Dimensions (\"{width}\", \"{height}\"), {origin_x: 0.5}, {origin_y: 0.5}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))"  
 
 };
 
+string generateCreateCode (string elementType, string command, int lineNumber) {
 
-
-
-string getArgumentByIndex (int elementType, int index) {
-    switch (elementType) {
-        case RECTANGLE: return args_RECTANGLE[index][name];
-    }
-    return "";
-}
-
-// CREATE `Rectangle` `heheh` SET (width = 10%, height = 100, top = 50%, left = 50%, originX = 0.5, originY = 0.5) as `r1`
-string generateCreateCode (string elementType, string command) {
-    
     smatch userArguments;
     regex_search (command, userArguments, regex ("\\((.+)\\)"));
     vector<string> arguments = split (userArguments [1], ',');
     
+    string baseCode, searchCode;
+    baseCode = searchCode = argsBaseCode[getElementTypeID (elementType)];
+
     smatch argumentMatch;
-    while (regex_search (command, argumentMatch, regex ("\\{.+\\}"))) {
-        string baseArgument = argumentMatch[1];
+    while (regex_search (searchCode, argumentMatch, regex ("\\{([^{}]+)\\}"))) {
+
+        bool argumentFound = false;
+        string argumentName = removeSpaces (split (argumentMatch [1], ':')[0]);
+
+        for (int i = 0; i < arguments.size (); i++) {
+            if (argumentName == removeSpaces (split (arguments[i], '=') [0])) {
+
+                argumentFound = true;
+
+                string replaceSubString = argumentMatch[0];
+                replaceSubString = regex_replace(replaceSubString, regex ("(([\\{\\}\\:]))" ), "\\$1");
+
+                baseCode = regex_replace (
+                    baseCode, 
+                    regex (replaceSubString),
+                    removeSpaces (split (arguments[i], '=') [1])
+                );
+
+            }
+        }
+
+        if (!argumentFound) {
+            if (string (argumentMatch[0]).find (':') != string::npos) {
+                string replaceSubString = argumentMatch[0];
+                replaceSubString = regex_replace(replaceSubString, regex ("(([\\{\\}\\:]))" ), "\\$1");
+                baseCode = regex_replace (
+                    baseCode,
+                    regex (replaceSubString),
+                    removeSpaces (split (argumentMatch[1], ':') [1])
+                );
+            } else {
+                cout << "ERROR: Invalid number of arguments provided at line " << lineNumber << endl;
+                return "";
+            }
+        }
+
+        searchCode = argumentMatch.suffix ();
     }
 
-    return "";
+    return elementType + " " + "r1" + " " + baseCode + ";";
 }
 
-string processCommand (string command) {
+string processCommand (string command, int lineNumber) {
     string outputStatement = "";
     switch (getCommandID (command.substr (0, command.find (" ")))) {
         case CREATE: {
             string elementType = getElementType (command);
             if (isValidElement (elementType)) {
-                outputStatement = generateCreateCode (elementType, command);
+                outputStatement = generateCreateCode (elementType, command, lineNumber);
+                cout << outputStatement << endl;
             } else {
                 cout << "ERROR: The element '" << elementType << "' is not supported." << endl;
                 cout << "Are you sure you're entering the name correctly ?" << endl;
@@ -143,13 +170,15 @@ string processCommand (string command) {
 int main () {
 
     string line;
+    int lineNumber;
 
     ifstream Script ("./script.ugcl");
 
     while (getline (Script, line)) {
         if (isValidCommand (line)) {
-            processCommand (line);
+            processCommand (line, lineNumber);
         }
+        lineNumber++;
     }
 
     Script.close ();
