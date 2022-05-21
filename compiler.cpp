@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <regex>
 
 using namespace std;
 
@@ -8,41 +9,67 @@ enum {
     UPDATE
 };
 
-int getCommandID (string cmd) {
-    if (cmd == "CREATE") return CREATE;
-    if (cmd == "UPDATE") return UPDATE;
-    return -100;
+enum {
+    RECTANGLE,
+    POLYGON,
+    PATH,
+    LINE,
+    ARC
+};
+
+int getCommandID (string commandName) {
+    if (commandName == "CREATE") return CREATE;
+    if (commandName == "UPDATE") return UPDATE;
+    return -1;
+}
+
+int getElementID (string type) {
+    if (type == "Line") return LINE;
+    if (type == "Path") return PATH;
+    if (type == "Arc") return ARC;
+    return -1;
 }
 
 bool intToBool (int input) {
-    if (input >= 1)
-        return true;
-    return false;
+    return (input >= 1);
 }
 
-bool isValidCommand (string command) {
+bool isValidCommand (string commandName) {
     return intToBool (
-        getCommandID (command.substr (0, command.find (" "))) + 1
+        getCommandID (
+            commandName.substr (0, commandName.find (" "))
+        ) + 1
+    );
+}
+
+bool isValidElement (string type) {
+    return intToBool (
+        getElementID (type) + 1
     );
 }
 
 string getElementType (string command) {
-    command.substr (command.find ("`"), )
-    return "";
+    smatch match;
+    regex_search (command, match, regex ("`(\\w+)`"));
+    return match [1];
 }
 
 string processCommand (string command) {
     switch (getCommandID (command.substr (0, command.find (" ")))) {
-        case 0: {
-            string type = getElementType (command);
+        case CREATE: {
+            if (isValidElement (getElementType (command))) {
+                // There's alot of processing to be done here and I'm too lazy what the hell is wrong with me
+            } else {
+                cout << "ERROR: The element '" << type << "' is not supported." << endl;
+                cout << "Are you sure you're entering the name correctly ?" << endl;
+            }
             break;
         }
-        case 1: {
-            cout << "UPDATE" << endl;
+        case UPDATE: {
             break;
         }
         default: {
-            cout << "lol" << endl;
+            cout << "INVALID COMMAND TYPE" << endl;
         }
     }
     return "";

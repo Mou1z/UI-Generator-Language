@@ -1,3 +1,3 @@
-CREATE `Rectangle` SET (width = 10%, height = 100, top = 50%, left = 50%, originX = 0.5, originY = 0.5)
+CREATE `Rectangle` `heheh` SET (width = 10%, height = 100, top = 50%, left = 50%, originX = 0.5, originY = 0.5) as `r1`
 UPDATE something
 lol fwefseiojgowe
