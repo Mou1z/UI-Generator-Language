@@ -67,16 +67,6 @@ class Image : public Rectangle {
 
         void draw (const Cairo::RefPtr<Cairo::Context>& context) {
             
-            context->rectangle (
-
-                position.getX () - (originX * windowData::width), 
-                position.getY () - (originY * windowData::height), 
-
-                dimensions.getWidth (), 
-                dimensions.getHeight ()
-
-            );    
-
             auto image = Gdk::Pixbuf::create_from_file (fill.getFile());
             Gdk::Cairo::set_source_pixbuf (
                 context,
@@ -84,8 +74,8 @@ class Image : public Rectangle {
                 dimensions.getWidth(), 
                 dimensions.getHeight()
                 );
-            context->fill();
-
+            context->paint();
+        
             if (!stroke.isNull ()) {
                 context->set_source_rgba (
                     stroke.getColor ().r (),
@@ -95,7 +85,8 @@ class Image : public Rectangle {
                 );
                 context->set_line_width (stroke.getWidth ());
                 context->stroke ();
-            }
-        }
+            } 
 
+        }
+        
 };
