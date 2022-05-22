@@ -13,8 +13,8 @@ enum {
 enum {
     RECTANGLE,
     POLYGON,
-    PATH,
     LINE,
+    PATH,
     ARC
 };
 
@@ -84,9 +84,13 @@ string removeSpaces (string input) {
 
 // {propertyName, defaultValue, classGroup}
 
-string argsBaseCode [1] = {
+string argsBaseCode [5] = {
 
-    "(Coordinate (\"{left}\", \"{top}\"}), Dimensions (\"{width}\", \"{height}\"), {origin_x: 0.5}, {origin_y: 0.5}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))"  
+    "(Coordinate (\"{left}\", \"{top}\"}), Dimensions (\"{width}\", \"{height}\"), {origin_x: 0.5}, {origin_y: 0.5}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))",
+    "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))",
+    "(Coordinate (\"{start_x}\", \"{start_y}\"), Coordinate (\"{end_x}\", \"{end_y}\"), StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")))",
+    "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width: 1}, Color32 ({stroke_color: #000000FF})))",
+    "(Coordinate (\"{left}\", \"{top}\"), {radius}, {angle_start}, {angle_end}, StrokeData ({stroke_width: 1}, Color32 ({stroke_color: #000000FF})), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))"
 
 };
 
@@ -105,36 +109,96 @@ string generateCreateCode (string elementType, string command, int lineNumber) {
         bool argumentFound = false;
         string argumentName = removeSpaces (split (argumentMatch [1], ':')[0]);
 
-        for (int i = 0; i < arguments.size (); i++) {
-            if (argumentName == removeSpaces (split (arguments[i], '=') [0])) {
+        if (string (argumentMatch[0]).find ("...") == string::npos) {
 
-                argumentFound = true;
+            for (int i = 0; i < arguments.size (); i++) {
+                if (argumentName == removeSpaces (split (arguments[i], '=') [0])) {
 
-                string replaceSubString = argumentMatch[0];
-                replaceSubString = regex_replace(replaceSubString, regex ("(([\\{\\}\\:]))" ), "\\$1");
+                    argumentFound = true;
 
-                baseCode = regex_replace (
-                    baseCode, 
-                    regex (replaceSubString),
-                    removeSpaces (split (arguments[i], '=') [1])
-                );
+                    string replaceSubString = argumentMatch[0];
+                    replaceSubString = regex_replace(replaceSubString, regex ("(([\\{\\}\\:]))" ), "\\$1");
 
+                    baseCode = regex_replace (
+                        baseCode, 
+                        regex (replaceSubString),
+                        removeSpaces (split (arguments[i], '=') [1])
+                    );
+
+                }
             }
-        }
 
-        if (!argumentFound) {
-            if (string (argumentMatch[0]).find (':') != string::npos) {
-                string replaceSubString = argumentMatch[0];
-                replaceSubString = regex_replace(replaceSubString, regex ("(([\\{\\}\\:]))" ), "\\$1");
-                baseCode = regex_replace (
-                    baseCode,
-                    regex (replaceSubString),
-                    removeSpaces (split (argumentMatch[1], ':') [1])
-                );
+            if (!argumentFound) {
+                if (string (argumentMatch[0]).find (':') != string::npos) {
+                    string replaceSubString = argumentMatch[0];
+                    replaceSubString = regex_replace(replaceSubString, regex ("(([\\{\\}\\:]))" ), "\\$1");
+                    baseCode = regex_replace (
+                        baseCode,
+                        regex (replaceSubString),
+                        removeSpaces (split (argumentMatch[1], ':') [1])
+                    );
+                } else {
+                    cout << "ERROR: Invalid number of arguments provided at line " << lineNumber + 1 << endl;
+                    return "";
+                }
+            }
+
+        } else {
+
+            // Recurring (Repeated) Argument
+
+            // "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width}, Color32 (\"{stroke_color}\")), FillData (Color32 (\"{fill_color}\")))"
+
+            smatch subArgument;
+            string searchString = argumentMatch[0];
+
+            vector<string> subArguments;
+            vector<string> outputParts;
+
+            int argumentIndex = 1;
+
+            while (regex_search (searchString, subArgument, regex ("\\[([^\\[\\]]+)\\]"))) {
+                subArguments.push_back (string (subArgument[1]));
+                searchString = subArgument.suffix ();
+            }
+
+            while (true) {
+                int matchedArguments = 0;
+                bool matchedRequiredArguments = false;
+                string argumentString = regex_replace (string (argumentMatch[1]), regex("\\s\\.\\.\\."), "");
+                for (int i = 0; i < subArguments.size (); i++) {
+                    string searchArgument = regex_replace (string (subArguments[i]), regex ("#"), to_string (argumentIndex));
+                    for (int j = 0; j < arguments.size (); j++) {
+                        if (removeSpaces (split (arguments[j], '=') [0]) == searchArgument) {
+                            argumentString = regex_replace (argumentString, regex ("\\[" + subArguments[i] + "\\]"), removeSpaces (split (arguments[j], '=')[1]));
+                            matchedArguments++;
+                        }
+                    }
+                }
+                if (matchedArguments == subArguments.size ()) {
+                    argumentIndex++;
+                    matchedArguments = 0;
+                    outputParts.push_back (argumentString);
+                } else {
+                    break;
+                }
+            }
+
+            if (!outputParts.size ()) {
+                cout << "ERROR: Invalid number of arguments provided at line " << lineNumber + 1 << endl;
             } else {
-                cout << "ERROR: Invalid number of arguments provided at line " << lineNumber << endl;
-                return "";
+                string output = "{ ";
+                for (int i = 0; i < outputParts.size (); i++) {
+                    output += outputParts[i];
+                    if (i != outputParts.size () - 1) {
+                        output += ", ";
+                    }
+                }
+                output += " }";
+                string searchString = regex_replace(string (argumentMatch[0]), regex ("(([\\{\\}\\[\\]\\#\\\"\\(\\)\\.]))" ), "\\$1");
+                baseCode = regex_replace (baseCode, regex (searchString), output);
             }
+
         }
 
         searchCode = argumentMatch.suffix ();

@@ -373,6 +373,8 @@ class Line {
 
 };
 
+// 
+
 class Path {
 
     private:
@@ -641,6 +643,8 @@ class Polygon : public Shape {
         }
 
 };
+
+// 
 
 class Arc {
 
