@@ -1,0 +1,81 @@
+class Image : public Shape {
+
+    private:
+
+        Coordinate position;
+        Dimensions dimensions;
+
+        float originX;
+        float originY;
+
+        string fileName;
+
+    public:
+
+        Image (
+            
+            Coordinate position,
+            Dimensions dimensions,
+            
+            float originX,
+            float originY,
+
+            string fileName
+
+        ) {
+            
+            this->position = position;
+            this->dimensions = dimensions;
+
+            this->originX = originX;
+            this->originY = originY;
+
+            this->fileName = fileName;
+
+        }
+
+        void draw (const Cairo::RefPtr<Cairo::Context>& context) {
+
+            auto image = Gdk::Pixbuf::create_from_file(fileName);
+
+            /*
+            context->rectangle (
+
+                position.getX () - (originX * windowData::width), 
+                position.getY () - (originY * windowData::height), 
+
+                dimensions.getWidth (), 
+                dimensions.getHeight ()
+
+            );
+            */
+
+            Gdk::Cairo::set_source_pixbuf ( context, image, dimensions.getWidth(), dimensions.getHeight() );
+
+            context->rectangle(
+                0,0,
+                image->get_width(), 
+                image->get_height()
+            );
+
+            context->fill();
+
+        }
+
+        bool isPointInsideShape (int x, int y) {
+
+            float pivotX = (originX * windowData::width);
+            float pivotY = (originY * windowData::height);
+
+            if (
+                (position.getX () - pivotX) <= x && x <= (position.getX () + dimensions.getWidth () - pivotX)
+                    &&
+                (position.getY () - pivotY) <= y && y <= (position.getY () + dimensions.getHeight () - pivotY) 
+            ) {
+                return true;
+            }
+
+            return false;
+        }
+
+};
