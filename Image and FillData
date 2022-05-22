@@ -1,0 +1,101 @@
+
+class FillData {
+
+    private:
+
+        // More members might be added.
+        Color32 color;
+
+        //location of image
+        string fileName;
+
+    public:
+
+        FillData () { }
+
+        FillData (Color32 color) {
+            this->color = color;
+            this->fileName = "";
+        }
+
+        FillData (string fileName) {
+            this->fileName = fileName;
+            this->color = Color32(0,0,0,0);
+        }
+
+        bool isNull () {
+            return color.a () == 0.0;
+        }
+
+        //not in use at the moment
+        bool isFileNull () {
+            return fileName == "";
+        }
+
+        Color32 getColor () {
+            return color;
+        }
+
+        string getFile () {
+            return fileName;
+        }
+
+};
+
+class Image : public Rectangle {
+
+    private:
+    //properties might be added
+    //File name of the image will be stored in the FillData class
+
+    public:
+
+        Image (
+            
+            Coordinate position,
+            Dimensions dimensions,
+
+            float originX,
+            float originY,
+
+            StrokeData stroke,
+            FillData fill
+
+        ) : Rectangle (position, dimensions, originX, originY, stroke, fill) {
+            
+        }
+
+        void draw (const Cairo::RefPtr<Cairo::Context>& context) {
+            
+            context->rectangle (
+
+                position.getX () - (originX * windowData::width), 
+                position.getY () - (originY * windowData::height), 
+
+                dimensions.getWidth (), 
+                dimensions.getHeight ()
+
+            );    
+
+            auto image = Gdk::Pixbuf::create_from_file (fill.getFile());
+            Gdk::Cairo::set_source_pixbuf (
+                context,
+                image, 
+                dimensions.getWidth(), 
+                dimensions.getHeight()
+                );
+            context->fill();
+
+            if (!stroke.isNull ()) {
+                context->set_source_rgba (
+                    stroke.getColor ().r (),
+                    stroke.getColor ().g (),
+                    stroke.getColor ().b (),
+                    stroke.getColor ().a ()
+                );
+                context->set_line_width (stroke.getWidth ());
+                context->stroke ();
+            }
+        }
+
+};
