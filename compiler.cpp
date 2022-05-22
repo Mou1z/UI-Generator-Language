@@ -94,7 +94,7 @@ string argsBaseCode [5] = {
 
 };
 
-string generateCreateCode (string elementType, string command, int lineNumber) {
+string generateCreateCode (string elementType, string elementName, string command, int lineNumber) {
 
     smatch userArguments;
     regex_search (command, userArguments, regex ("\\((.+)\\)"));
@@ -204,7 +204,15 @@ string generateCreateCode (string elementType, string command, int lineNumber) {
         searchCode = argumentMatch.suffix ();
     }
 
-    return elementType + " " + "r1" + " " + baseCode + ";";
+    return elementType + " " + elementName + " " + baseCode + ";";
+}
+
+string getElementName (string command) {
+    smatch match;
+    if (regex_search (command, match, regex ("as\\s+\\`(\\w+)\\`"))) {
+        return match[1];
+    }
+    return "";
 }
 
 string processCommand (string command, int lineNumber) {
@@ -213,7 +221,7 @@ string processCommand (string command, int lineNumber) {
         case CREATE: {
             string elementType = getElementType (command);
             if (isValidElement (elementType)) {
-                outputStatement = generateCreateCode (elementType, command, lineNumber);
+                outputStatement = generateCreateCode (elementType, getElementName (command), command, lineNumber);
                 cout << outputStatement << endl;
             } else {
                 cout << "ERROR: The element '" << elementType << "' is not supported." << endl;
