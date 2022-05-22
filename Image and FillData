@@ -71,8 +71,8 @@ class Image : public Rectangle {
             Gdk::Cairo::set_source_pixbuf (
                 context,
                 image, 
-                dimensions.getWidth(), 
-                dimensions.getHeight()
+                position.getX(), 
+                position.getY()
                 );
             context->paint();
         
