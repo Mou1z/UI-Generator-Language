@@ -529,8 +529,8 @@ class Rectangle : public Shape {
 
             context->rectangle (
 
-                position.getX () - (originX * dimensions.getWidth ()), 
-                position.getY () - (originY * dimensions.getHeight ()), 
+                position.getX () - (originX * windowData::width), 
+                position.getY () - (originY * windowData::height), 
 
                 dimensions.getWidth (), 
                 dimensions.getHeight ()
@@ -561,9 +561,8 @@ class Rectangle : public Shape {
 
         bool isPointInsideShape (int x, int y) {
 
-            // Look at these two lines first if there's any problem in the function.
-            float pivotX = (originX * dimensions.getWidth ());
-            float pivotY = (originY * dimensions.getHeight ());
+            float pivotX = (originX * windowData::width);
+            float pivotY = (originY * windowData::height);
 
             if (
                 (position.getX () - pivotX) <= x && x <= (position.getX () + dimensions.getWidth () - pivotX)
@@ -776,15 +775,10 @@ class Image : public Rectangle {
 
 // {creationCode}
 
-Rectangle r1 (Coordinate ("50%", "50%"), Dimensions ("50%", "50%"), 0.5f, 0.5f, StrokeData (2, Color32 ("#000000FF")), FillData (Color32 ("#FF0000FF")));
-Path p1 ({ Coordinate ("50%", "50%"), Coordinate ("75%", "75%"), Coordinate ("25%", "75%"), Coordinate ("50%", "50%") }, StrokeData (2, Color32 ("#000000FF")));
-
 void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
     windowData::updateWindowSizeData (width, height);
 
     // {onDrawCode}
-    r1.draw (cr);
-    p1.draw (cr);
 
 }
 

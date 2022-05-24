@@ -1,5 +1,2 @@
-CREATE `Rectangle` (height = 100px, width = 15%, top = 50%, stroke_width = 5, left = 50%, origin_x = 0.5, origin_y = 0.5) as `r1`
-CREATE `Polygon` (x1 = 5px, y1 = 10px, x2 = 20px, x3 = 10px, y3 = 20px, y2 = 50px, fill_color = #FF0000FF) as `p1`
-CREATE `Line` (start_x = 20%, start_y = 10%, end_x = 10px, end_y = 20%) as `fda1`
-CREATE `Path` (x1 = 1px, y1 = 10px, x2 = 10%, y2 = 100px) as    `fsdkfjo`
-CREATE `Arc` (left = 20px, top = 100px, radius = 10, angle_start = 0, angle_end = 3.14)    as  `dsa1`
+CREATE `Rectangle` (top = 50%, left = 50%, width = 100px, height = 100px, origin_x = 0.5, origin_y = 0.5) as `r1`
+CREATE `Path` (x1 = 50%, y1 = 50%, x2 = 75%, y2 = 75%, x3 = 25%, y3 = 75%, x4 = 50%, y4 = 50%) as `p1`

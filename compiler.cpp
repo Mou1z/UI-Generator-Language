@@ -86,11 +86,11 @@ string removeSpaces (string input) {
 
 string argsBaseCode [5] = {
 
-    "(Coordinate (\"{left}\", \"{top}\"}), Dimensions (\"{width}\", \"{height}\"), {origin_x: 0.5}, {origin_y: 0.5}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))",
+    "(Coordinate (\"{left}\", \"{top}\"), Dimensions (\"{width}\", \"{height}\"), {origin_x: 0.5}, {origin_y: 0.5}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))",
     "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))",
     "(Coordinate (\"{start_x}\", \"{start_y}\"), Coordinate (\"{end_x}\", \"{end_y}\"), StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")))",
-    "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width: 1}, Color32 ({stroke_color: #000000FF})))",
-    "(Coordinate (\"{left}\", \"{top}\"), {radius}, {angle_start}, {angle_end}, StrokeData ({stroke_width: 1}, Color32 ({stroke_color: #000000FF})), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))"
+    "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")))",
+    "(Coordinate (\"{left}\", \"{top}\"), {radius}, {angle_start}, {angle_end}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))"
 
 };
 
@@ -146,8 +146,6 @@ string generateCreateCode (string elementType, string elementName, string comman
         } else {
 
             // Recurring (Repeated) Argument
-
-            // "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width}, Color32 (\"{stroke_color}\")), FillData (Color32 (\"{fill_color}\")))"
 
             smatch subArgument;
             string searchString = argumentMatch[0];
