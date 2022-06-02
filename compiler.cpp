@@ -5,11 +5,44 @@
 
 using namespace std;
 
+vector<string> createdElements;
+
+string removeSpaces (string input) {
+    string output;
+    for (int i = 0; i < input.length (); i++) {
+        if (input[i] != ' ') {
+            output += input[i];
+        }
+    }
+    return output;
+}
+
+string removeTabs (string input) {
+    string output;
+    for (int i = 0; i < input.length (); i++) {
+        if (input[i] != '\t') {
+            output += input[i];
+        }
+    }
+    return output;
+}
+
+string removeWhitespace (string input) {
+    string output;
+    for (int i = 0; i < input.length (); i++) {
+        if (input[i] != ' ' && input[i] != '\t') {
+            output += input[i];
+        }
+    }
+    return output;
+}
+
 enum {
     CREATE,
     UPDATE
 };
 
+// Element Types Enumerator
 enum {
     RECTANGLE,
     POLYGON,
@@ -17,6 +50,23 @@ enum {
     PATH,
     ARC
 };
+
+// Events Enumerator
+enum {
+    OnShapeClick,
+    
+    OnKeyPress,
+    OnKeyRelease,
+
+    OnMouseMove,
+    OnMouseClick,
+
+    OnMouseUp,
+    OnMouseDown
+};
+
+// Set all elements of the array to an empty strings.
+string eventsCode [7] = { "" };
 
 int getCommandID (string commandName) {
     if (commandName == "CREATE") return CREATE;
@@ -30,6 +80,20 @@ int getElementTypeID (string type) {
     if (type == "Line") return LINE;
     if (type == "Path") return PATH;
     if (type == "Arc") return ARC;
+    return -1;
+}
+
+int getEventTypeID (string type) {
+    if (type == "OnShapeClick") return OnShapeClick;
+
+    if (type == "OnKeyPress") return OnKeyPress;
+    if (type == "OnKeyRelease") return OnKeyRelease;
+
+    if (type == "OnMouseMove") return OnMouseMove;
+    if (type == "OnMouseClick") return OnMouseClick;
+
+    if (type == "OnMouseUp") return OnMouseUp;
+    if (type == "OnMouseDown") return OnMouseDown;
     return -1;
 }
 
@@ -49,6 +113,17 @@ bool isValidElement (string type) {
     return intToBool (
         getElementTypeID (type) + 1
     );
+}
+
+bool isValidEvent (string line) {
+    if (line.substr (0, line.find (" ")) == "event") {
+        return intToBool (
+            getEventTypeID (
+                removeSpaces (line.substr (line.find (" "), line.length ())) 
+            ) + 1
+        );
+    }
+    return false;
 }
 
 string getElementType (string command) {
@@ -72,17 +147,11 @@ vector<string> split (string input, char character) {
     return parts;
 }
 
-string removeSpaces (string input) {
-    string output;
-    for (int i = 0; i < input.length (); i++) {
-        if (input[i] != ' ') {
-            output += input[i];
-        }
-    }
-    return output;
-}
-
 // {propertyName, defaultValue, classGroup}
+
+string updateArgsBaseCode [] = {
+    
+};
 
 string argsBaseCode [5] = {
 
@@ -202,6 +271,8 @@ string generateCreateCode (string elementType, string elementName, string comman
         searchCode = argumentMatch.suffix ();
     }
 
+    createdElements.push_back (elementName);
+
     return elementType + " " + elementName + " " + baseCode + ";";
 }
 
@@ -220,7 +291,7 @@ string processCommand (string command, int lineNumber) {
             string elementType = getElementType (command);
             if (isValidElement (elementType)) {
                 outputStatement = generateCreateCode (elementType, getElementName (command), command, lineNumber);
-                cout << outputStatement << endl;
+                return outputStatement;
             } else {
                 cout << "ERROR: The element '" << elementType << "' is not supported." << endl;
                 cout << "Are you sure you're entering the name correctly ?" << endl;
@@ -228,6 +299,20 @@ string processCommand (string command, int lineNumber) {
             break;
         }
         case UPDATE: {
+            bool found = false;
+            smatch match;
+            regex_search (line, match, regex ("`(\\w+)`"));
+            for (int i = 0; i < createdElements.size (); i++) {
+                createdElements[i] == match[i];
+                found = true;
+                break;
+            }
+            if (!found) {
+                cout << "ERROR: Target element " << match[1] << " at line " << lineNumber << " is not defined. ";
+                break;
+            } else {
+
+            }
             break;
         }
         default: {
@@ -237,16 +322,40 @@ string processCommand (string command, int lineNumber) {
     return "";
 }
 
+string processEvent (string lineBlock) {
+    vector<string> lines = split (lineBlock, '\n');
+    for (int i = 1; i < lines.size (); i++) {
+        if (isValidCommand (lines[i])) {
+            processCommand (lines[i]);
+        }
+    }
+    return "";
+}
+
 int main () {
 
     string line;
+    string lineBlock = "";
+
     int lineNumber;
+    bool readingEvent = false;
 
     ifstream Script ("./script.ugcl");
 
     while (getline (Script, line)) {
-        if (isValidCommand (line)) {
-            processCommand (line, lineNumber);
+        if (readingEvent && line[0] == '\t') {
+            lineBlock += "\n" + line;
+        } else {
+            if (readingEvent) {
+                readingEvent = false;
+                processEvent (lineBlock);
+            }
+            if (isValidCommand (line)) {
+                processCommand (line, lineNumber);
+            } else if (isValidEvent (line)) {
+                lineBlock = line;
+                readingEvent = true;
+            }
         }
         lineNumber++;
     }

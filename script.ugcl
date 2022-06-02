@@ -1,2 +1,12 @@
 CREATE `Rectangle` (top = 50%, left = 50%, width = 100px, height = 100px, origin_x = 0.5, origin_y = 0.5) as `r1`
 CREATE `Path` (x1 = 50%, y1 = 50%, x2 = 75%, y2 = 75%, x3 = 25%, y3 = 75%, x4 = 50%, y4 = 50%) as `p1`
+
+event OnMouseMove
+	UPDATE `r1` (left = {x}, top = {y})
+	do some stuff
+	ahaha
+	UPDATE `2` (right = {})
+
+dfksdjfs
+
+CREATE `Rectangle` (top = 50%, left = 50%, width = 100px, height = 100px, origin_x = 0.5, origin_y = 0.5) as `r2`

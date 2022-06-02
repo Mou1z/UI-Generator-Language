@@ -275,6 +275,14 @@ class StrokeData {
             return color;
         }
 
+        void setWidth (int width) {
+            this->width = width;
+        }
+
+        void setColor (Color32 color) {
+            this->color = color;
+        }
+
 };
 
 class Coordinate {
@@ -307,6 +315,14 @@ class Coordinate {
             return processMagnitude (y, windowData::height);
         }
 
+        void setX (string x) {
+            this->x = x;
+        }
+
+        void setY (string y) {
+            this->y = y;
+        }
+
 };
 
 class Dimensions {
@@ -334,6 +350,14 @@ class Dimensions {
 
         float getHeight () {
             return processMagnitude (height, windowData::height);
+        }
+
+        void setWidth (string width) {
+            this->width = width;
+        }
+
+        void setHeight (string height) {
+            this->height = height;
         }
 
 };
@@ -390,6 +414,30 @@ class Line {
             this->end = newEnd;
         }
 
+        void set_start_x (string x) {
+            this->start.setX (x);
+        }
+
+        void set_start_y (string y) {
+            this->start.setY (y);
+        }
+
+        void set_end_x (string x) {
+            this->end.setX (x);
+        }
+
+        void set_end_y (string y) {
+            this->end.setY (y);
+        }
+
+        void set_stroke_width (int width) {
+            this->stroke.setWidth (width);
+        }
+
+        void set_stroke_color (Color32 color) {
+            this->stroke.setColor (color);
+        }
+
 };
 
 // 
@@ -437,6 +485,22 @@ class Path {
             points.push_back (newPoint);
         }
 
+        void set_stroke_width (int width) {
+            this->stroke.setWidth (width);
+        }
+
+        void set_stroke_color (Color32 color) {
+            this->stroke.setColor (color);
+        }
+
+        void set_point_x (int i, string x) {
+            this->points[i].setX (x);
+        }
+
+        void set_point_y (int i, string y) {
+            this->points[i].setY (y);
+        }
+
 };
 
 class Shape { 
@@ -478,6 +542,8 @@ class Shape {
         virtual string getType () {
             return "None";
         }
+
+        virtual void draw (const Cairo::RefPtr<Cairo::Context>& context) = 0;
 
 };
 
@@ -584,6 +650,42 @@ class Rectangle : public Shape {
             return "Rectangle";
         }
 
+        void set_position_x (string x) {
+            this->position.setX (x);
+        }
+
+        void set_position_y (string y) {
+            this->position.setY (y);
+        }
+
+        void set_width (string width) {
+            this->dimensions.setWidth (width);
+        }
+
+        void set_height (string height) {
+            this->dimensions.setHeight (height);
+        }
+
+        void set_origin_x (float originX) {
+            this->originX = originX;
+        }
+
+        void set_origin_y (float originY) {
+            this->originY = originY;
+        }
+
+        void set_stroke_width (int width) {
+            this->stroke.setWidth (width);
+        }
+
+        void set_stroke_color (Color32 color) {
+            this->stroke.setColor (color);
+        }
+
+        void set_fill_color (Color32 color) {
+            this->fill = FillData (color);
+        }
+
 };
 
 bool ccw (Coordinate a, Coordinate b, Coordinate c) {
@@ -662,6 +764,26 @@ class Polygon : public Shape {
             return "Polygon";
         }
 
+        void set_x (int i, string x) {
+            this->vertices[i].setX (x);
+        }
+
+        void set_y (int y, string y) {
+            this->vertices[i].setY (y);
+        }
+
+        void set_stroke_width (int width) {
+            this->stroke.setWidth (width);
+        }
+
+        void set_stroke_color (Color32 color) {
+            this->stroke.setColor (color);
+        }
+
+        void set_fill_color (Color32 color) {
+            this->fill = FillData (color);
+        }
+
 };
 
 // 
@@ -720,6 +842,38 @@ class Arc {
                 context->stroke ();
             }
 
+        }
+
+        void set_position_x (string x) {
+            this->position.setX (x);
+        }
+
+        void set_position_y (string y) {
+            this->position.setY (y);
+        }
+
+        void set_radius (float radius) {
+            this->radius = radius;
+        }
+
+        void set_angle_start (float startAngle) {
+            this->startAngle = startAngle;
+        }
+
+        void set_angle_end (float endAngle) {
+            this->endAngle = endAngle;
+        }
+
+        void set_stroke_width (int width) {
+            this->stroke.setWidth (width);
+        }
+
+        void set_stroke_color (Color32 color) {
+            this->stroke.setColor (color);
+        }
+
+        void set_fill_color (Color32 color) {
+            this->fill = FillData (color);
         }
 
 };
