@@ -307,6 +307,14 @@ class Coordinate {
             return processMagnitude (y, windowData::height);
         }
 
+        void setX (string x) {
+            this->x = x;
+        }
+
+        void setY (string y) {
+            this->y = y;
+        }
+
 };
 
 class Dimensions {
@@ -334,6 +342,14 @@ class Dimensions {
 
         float getHeight () {
             return processMagnitude (height, windowData::height);
+        }
+
+        void setWidth (string width) {
+            this->width = width;
+        }
+
+        void setHeight (string height) {
+            this->height = height;
         }
 
 };
@@ -382,12 +398,20 @@ class Line {
             return end;
         }
 
-        void setStart (Coordinate newStart) {
-            this->start = newStart;
+        void set_start_x (string x) {
+            start.setX (x);
         }
 
-        void setEnd (Coordinate newEnd) {
-            this->end = newEnd;
+        void set_start_y (string y) {
+            start.setY (y);
+        }
+
+        void set_end_x (string x) {
+            end.setX (x);
+        }
+
+        void set_end_y (string y) {
+            end.setY (y);
         }
 
 };
@@ -437,6 +461,14 @@ class Path {
             points.push_back (newPoint);
         }
 
+        void set_point_x (int point, string x) {
+            points[i].setX (x);
+        }
+
+        void set_point_y (int point, string y) {
+            points[i].setY (y);
+        }
+
 };
 
 class Shape { 
@@ -470,14 +502,8 @@ class Shape {
             this->z_index = z_index;
         }
 
-        virtual bool isPointInsideShape (int x, int y) {
-            cout << "Shape: Empty Method Called => isPointInsideShape ()" << endl;
-            return false;
-        }
-
-        virtual string getType () {
-            return "None";
-        }
+        virtual string getType () = 0;
+        virtual bool isPointInsideShape (int x, int y) = 0;
 
 };
 
@@ -498,6 +524,8 @@ class Rectangle : public Shape {
         FillData fill;
 
     public:
+
+        
 
         Rectangle (
             

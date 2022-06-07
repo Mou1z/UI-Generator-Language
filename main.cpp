@@ -764,14 +764,6 @@ class Polygon : public Shape {
             return "Polygon";
         }
 
-        void set_x (int i, string x) {
-            this->vertices[i].setX (x);
-        }
-
-        void set_y (int y, string y) {
-            this->vertices[i].setY (y);
-        }
-
         void set_stroke_width (int width) {
             this->stroke.setWidth (width);
         }
@@ -932,6 +924,8 @@ class Image : public Rectangle {
 
 Rectangle r1 (Coordinate ("50%", "50%"), Dimensions ("50%", "50%"), 0.5f, 0.5f, StrokeData (2, Color32 ("#000000FF")), FillData (Color32 ("#FF0000FF")));
 Path p1 ({ Coordinate ("50%", "50%"), Coordinate ("75%", "75%"), Coordinate ("25%", "75%"), Coordinate ("50%", "50%") }, StrokeData (2, Color32 ("#000000FF")));
+Line l1 (Coordinate ("50%", "50%"), Coordinate ("0%", "0%"), StrokeData (1, Color32 ("#000000FF")));
+
 
 void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
     windowData::updateWindowSizeData (width, height);
@@ -939,6 +933,7 @@ void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int hei
     // {onDrawCode}
     r1.draw (cr);
     p1.draw (cr);
+    l1.draw (cr);
 
 }
 
@@ -989,7 +984,11 @@ void mainWindow::onKeyRelease (guint keyval, guint keycode, Gdk::ModifierType st
 }
 
 void Canvas::onMouseMove (double x, double y) {
+
     // {OnMouseMove}
+    l1.set_end_x (to_string (x) + "px");
+    l1.set_end_y (to_string (y) + "px");
+    queue_draw ();
 }
 
 void onMouseClick (Canvas& canvas, int clicks, double x, double y) {

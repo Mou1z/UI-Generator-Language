@@ -147,18 +147,26 @@ vector<string> split (string input, char character) {
     return parts;
 }
 
-// {propertyName, defaultValue, classGroup}
-
-string updateArgsBaseCode [] = {
-    
+string updateArgsBaseCode [][2] = {
+    {"top", "set_top ({uv})"},
+    {"left", "set_left ({uv})"},
+    {"width", "set_width ({uv})"},
+    {"height", "set_height ({uv})"},
+    {"origin_x", "set_origin_x ({uv})"},
+    {"origin_y", "set_origin_y ({uv})"},
+    {"stroke_width", "set_stroke_width ({uv})"},
+    {"stroke_color", "set_stroke_color ({rv})"},
+    {"fill_color", "set_fill_color ({rv})"},
+    {"vertix_#_x", "set_vertix (#, {uv})"},
+    {"vertix_#_y"}
 };
 
 string argsBaseCode [5] = {
 
     "(Coordinate (\"{left}\", \"{top}\"), Dimensions (\"{width}\", \"{height}\"), {origin_x: 0.5}, {origin_y: 0.5}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))",
-    "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))",
+    "({Coordinate (\"[vertix_#_x]\", \"[vertix_#_y]\") ...}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))",
     "(Coordinate (\"{start_x}\", \"{start_y}\"), Coordinate (\"{end_x}\", \"{end_y}\"), StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")))",
-    "({Coordinate (\"[x#]\", \"[y#]\") ...}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")))",
+    "({Coordinate (\"[point_#_x]\", \"[point_#_y]\") ...}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")))",
     "(Coordinate (\"{left}\", \"{top}\"), {radius}, {angle_start}, {angle_end}, StrokeData ({stroke_width: 1}, Color32 (\"{stroke_color: #000000FF}\")), FillData (Color32 (\"{fill_color: #FFFFFF00}\")))"
 
 };
@@ -326,7 +334,7 @@ string processEvent (string lineBlock) {
     vector<string> lines = split (lineBlock, '\n');
     for (int i = 1; i < lines.size (); i++) {
         if (isValidCommand (lines[i])) {
-            processCommand (lines[i]);
+            //processCommand (lines[i]);
         }
     }
     return "";
@@ -351,7 +359,7 @@ int main () {
                 processEvent (lineBlock);
             }
             if (isValidCommand (line)) {
-                processCommand (line, lineNumber);
+                cout << processCommand (line, lineNumber) << endl;
             } else if (isValidEvent (line)) {
                 lineBlock = line;
                 readingEvent = true;
