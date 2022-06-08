@@ -243,6 +243,10 @@ class FillData {
             return fileName;
         }
 
+        void setColor (Color32 color) {
+            this->color = color;
+        }
+
 };
 
 class StrokeData {
@@ -430,12 +434,8 @@ class Line {
             this->end.setY (y);
         }
 
-        void set_stroke_width (int width) {
-            this->stroke.setWidth (width);
-        }
-
-        void set_stroke_color (Color32 color) {
-            this->stroke.setColor (color);
+        StrokeData getStrokeData () {
+            return this->stroke;
         }
 
 };
@@ -485,20 +485,16 @@ class Path {
             points.push_back (newPoint);
         }
 
-        void set_stroke_width (int width) {
-            this->stroke.setWidth (width);
-        }
-
-        void set_stroke_color (Color32 color) {
-            this->stroke.setColor (color);
-        }
-
         void set_point_x (int i, string x) {
             this->points[i].setX (x);
         }
 
         void set_point_y (int i, string y) {
             this->points[i].setY (y);
+        }
+
+        StrokeData getStrokeData () {
+            return this->stroke;
         }
 
 };
@@ -674,16 +670,12 @@ class Rectangle : public Shape {
             this->originY = originY;
         }
 
-        void set_stroke_width (int width) {
-            this->stroke.setWidth (width);
+        StrokeData getStrokeData () {
+            return this->stroke;
         }
 
-        void set_stroke_color (Color32 color) {
-            this->stroke.setColor (color);
-        }
-
-        void set_fill_color (Color32 color) {
-            this->fill = FillData (color);
+        FillData getFillData () {
+            return this->fill;
         }
 
 };
@@ -764,18 +756,13 @@ class Polygon : public Shape {
             return "Polygon";
         }
 
-        void set_stroke_width (int width) {
-            this->stroke.setWidth (width);
+        StrokeData getStrokeData () {
+            return this->stroke;
         }
 
-        void set_stroke_color (Color32 color) {
-            this->stroke.setColor (color);
+        FillData getFillData () {
+            return this->fill;
         }
-
-        void set_fill_color (Color32 color) {
-            this->fill = FillData (color);
-        }
-
 };
 
 // 
@@ -856,16 +843,12 @@ class Arc {
             this->endAngle = endAngle;
         }
 
-        void set_stroke_width (int width) {
-            this->stroke.setWidth (width);
+        StrokeData getStrokeData () {
+            return this->stroke;
         }
 
-        void set_stroke_color (Color32 color) {
-            this->stroke.setColor (color);
-        }
-
-        void set_fill_color (Color32 color) {
-            this->fill = FillData (color);
+        FillData getFillData () {
+            return this->fill;
         }
 
 };

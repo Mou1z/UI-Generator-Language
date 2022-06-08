@@ -104,7 +104,7 @@ bool intToBool (int input) {
 bool isValidCommand (string commandName) {
     return intToBool (
         getCommandID (
-            commandName.substr (0, commandName.find (" "))
+            removeWhitespace (commandName.substr (0, commandName.find (" ")))
         ) + 1
     );
 }
@@ -148,18 +148,46 @@ vector<string> split (string input, char character) {
 }
 
 string updateArgsBaseCode [][2] = {
+
     {"top", "set_top ({uv})"},
     {"left", "set_left ({uv})"},
+
     {"width", "set_width ({uv})"},
     {"height", "set_height ({uv})"},
+
     {"origin_x", "set_origin_x ({uv})"},
     {"origin_y", "set_origin_y ({uv})"},
-    {"stroke_width", "set_stroke_width ({uv})"},
-    {"stroke_color", "set_stroke_color ({rv})"},
+
     {"fill_color", "set_fill_color ({rv})"},
-    {"vertix_#_x", "set_vertix (#, {uv})"},
-    {"vertix_#_y"}
+
+    {"vertix_#_x", "set_vertix_x (#, {uv})"},
+    {"vertix_#_y", "set_vertix_y (#, {uv})"},
+
+    {"stroke_width", "getStrokeData ().setWidth ({rv})"},
+    {"stroke_color", "getStrokeData ().setColor (Color32 ({rv}))"},
+
+    {"fill_color", "getFillData ().setColor (Color32 ({rv}))"},
+
+    {"start_x", "set_start_x ({uv})"},
+    {"start_y", "set_start_y ({uv})"},
+
+    {"end_x", "set_end_x ({ux}"},
+    {"end_y", "set_end_y ({ux}"},
+
+    {"point_#_x", "set_point_x (#, {uv})"},
+    {"point_#_y", "set_point_y (#, {uv})"},
+
+    {"radius", "set_radius ({rv})"},
+
+    {"angle_start", "set_angle_start ({rv})"},
+    {"angle_end", "set_angle_end ({rv})"}
+
 };
+
+string generateUpdateCode (string inputString) {
+    vector<string> userArguments = split (inputString, ',');
+    return "";
+}
 
 string argsBaseCode [5] = {
 
@@ -261,6 +289,7 @@ string generateCreateCode (string elementType, string elementName, string comman
 
             if (!outputParts.size ()) {
                 cout << "ERROR: Invalid number of arguments provided at line " << lineNumber + 1 << endl;
+                return "";  
             } else {
                 string output = "{ ";
                 for (int i = 0; i < outputParts.size (); i++) {
@@ -294,7 +323,7 @@ string getElementName (string command) {
 
 string processCommand (string command, int lineNumber) {
     string outputStatement = "";
-    switch (getCommandID (command.substr (0, command.find (" ")))) {
+    switch (getCommandID (removeWhitespace (command.substr (0, command.find (" "))))) {
         case CREATE: {
             string elementType = getElementType (command);
             if (isValidElement (elementType)) {
@@ -309,7 +338,7 @@ string processCommand (string command, int lineNumber) {
         case UPDATE: {
             bool found = false;
             smatch match;
-            regex_search (line, match, regex ("`(\\w+)`"));
+            regex_search (command, match, regex ("`(\\w+)`"));
             for (int i = 0; i < createdElements.size (); i++) {
                 createdElements[i] == match[i];
                 found = true;
@@ -319,24 +348,28 @@ string processCommand (string command, int lineNumber) {
                 cout << "ERROR: Target element " << match[1] << " at line " << lineNumber << " is not defined. ";
                 break;
             } else {
-
+                regex_search (command, match, regex ("\\((.*)\\)"));
+                generateUpdateCode (match);
             }
             break;
         }
         default: {
-            cout << "INVALID COMMAND TYPE" << endl;
+            cout << "INVALID COMMAND TYPE: " << command << endl;
         }
     }
     return "";
 }
 
-string processEvent (string lineBlock) {
+string processEvent (string lineBlock, int lineNumber, int eventLines) {
+
+    int startingLine = lineNumber - eventLines;
     vector<string> lines = split (lineBlock, '\n');
     for (int i = 1; i < lines.size (); i++) {
         if (isValidCommand (lines[i])) {
-            //processCommand (lines[i]);
+            processCommand (lines[i], startingLine + i);
         }
     }
+
     return "";
 }
 
@@ -346,6 +379,8 @@ int main () {
     string lineBlock = "";
 
     int lineNumber;
+
+    int eventLines;
     bool readingEvent = false;
 
     ifstream Script ("./script.ugcl");
@@ -353,19 +388,30 @@ int main () {
     while (getline (Script, line)) {
         if (readingEvent && line[0] == '\t') {
             lineBlock += "\n" + line;
+            eventLines++;
         } else {
             if (readingEvent) {
+                processEvent (lineBlock, lineNumber, eventLines);
+
+                // Emptying the data
                 readingEvent = false;
-                processEvent (lineBlock);
+                eventLines = 0;
+                lineBlock = "";
             }
             if (isValidCommand (line)) {
                 cout << processCommand (line, lineNumber) << endl;
             } else if (isValidEvent (line)) {
                 lineBlock = line;
                 readingEvent = true;
+                eventLines = 1;
             }
         }
         lineNumber++;
+    }
+
+    // In Case the lineBlock is left unprocessed
+    if (lineBlock != "") {
+        processEvent (lineBlock, lineNumber, eventLines);
     }
 
     Script.close ();

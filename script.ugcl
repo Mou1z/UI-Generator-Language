@@ -1,3 +1,8 @@
 CREATE `Rectangle` (top = 50%, left = 50%, width = 100px, height = 100px, origin_x = 0.5, origin_y = 0.5) as `r1`
-CREATE `Path` (x1 = 50%, y1 = 50%, x2 = 75%, y2 = 75%, x3 = 25%, y3 = 75%, x4 = 50%, y4 = 50%) as `p1`
-CREATE `Line` (start_x = 50%, end_y = 10%, stroke_color = #FFFFFFFF, stroke_width = 10)
+CREATE `Path` (point_1_x = 50%, point_1_y = 50%, point_2_x = 75%, point_2_y = 75%, point_3_x = 25%, point_3_y = 75%, point_4_x = 50%, point_4_y = 50%) as `p1`
+CREATE `Line` (start_x = 50%, start_y = 50%, end_x = 10%, end_y = 10%, stroke_color = #FFFFFFFF, stroke_width = 10) as `l1`
+
+event OnMouseMove
+	UPDATE `Lfasjfkl` (end_x = {mouse_x}_%, end_y = {mouse_y}_%)
+	hello world
+	UPDATE `l1` (end_x = {mouse_x}_%, end_y = {mouse_y}_%)
