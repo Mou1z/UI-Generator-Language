@@ -1,0 +1,120 @@
+class Image : public Rectangle {
+
+    private:
+    //properties might be added
+    //File name of the image will be stored in the FillData class
+
+    public:
+
+        Image (
+            
+            Coordinate position,
+
+            StrokeData stroke,
+            FillData fill
+
+        ) : Rectangle (position, Dimensions(), 0, 0, stroke, fill) {
+            
+        }
+
+        void draw (const Cairo::RefPtr<Cairo::Context>& context) {
+            /*
+            //trying to add the functionality to crop the image, 
+            //was a fail so removed the dimensions object from the constructor
+            //#include<opencv2/opencv.hpp>
+            //the above library to use the functions below
+
+            if ( dimensions.getHeight != 0 || dimensions.getWidth !=0 ) {
+                cv::Mat image1, image2;
+                image1=cv::imread(fill.getFile);
+                cv::Rect crop_region()
+            }
+            */
+            
+            auto image = Gdk::Pixbuf::create_from_file (fill.getFile());
+
+            Gdk::Cairo::set_source_pixbuf (
+                context,
+                image, 
+                position.getX (), 
+                position.getY ()
+            );
+            context->paint();
+        
+            if (!stroke.isNull ()) {
+                context->set_source_rgba (
+                    stroke.getColor ().r (),
+                    stroke.getColor ().g (),
+                    stroke.getColor ().b (),
+                    stroke.getColor ().a ()
+                );
+                context->set_line_width (stroke.getWidth ());
+                context->stroke ();
+            } 
+
+        }
+        
+};
+/*
+class Text {
+
+    private:
+
+        string fontFamily;
+        string text;
+
+        Color32 color;
+
+        Coordinate position;
+        Dimensions dimensions;
+
+    public:
+
+        Text(){
+
+        }
+
+        Text (
+
+            string fontFamily,
+            string text,
+
+            Color32 color,
+
+            Coordinate position,
+            Dimensions dimensions
+
+        ) {
+
+            this-> fontFamily = fontFamily;
+            this-> text = text;
+
+            this-> color = color;
+
+            this-> position = position;
+            this-> dimensions = dimensions;
+
+        }
+
+        void draw (const Cairo::RefPtr<Cairo::Context>& context) {
+
+            Pango::FontDescription font;
+
+            font.set_family ("Monospace");
+            font.set_weight (Pango::Weight::BOLD);
+
+            auto layout = canvas.create_pango_layout (text);
+            layout -> set_font_description (font);
+
+            layout-> get_pixel_size (50,50);
+
+            context-> move_to(50, 50);
+
+            layout-> show_in_cairo_context (context);
+
+    }
+};
+
+//facing an error in this one
+
+*/
