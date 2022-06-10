@@ -501,10 +501,12 @@ class Path {
 
 class Shape { 
 
-    private:
+    protected:
 
         int z_index;
         string type;
+
+        bool enabled;
 
     public:
 
@@ -515,11 +517,17 @@ class Shape {
             this->z_index = indices;
             cout << indices << endl;
             indices++;
+            enabled = true;
         }
 
         Shape (int z_index, int change = 0) {
             this->z_index = z_index;
             indices += change;
+            enabled = true;
+        }
+
+        void setEnable (bool val) {
+            this->enabled = val;
         }
 
         int get_z_index () {
@@ -589,36 +597,52 @@ class Rectangle : public Shape {
 
         void draw (const Cairo::RefPtr<Cairo::Context>& context) {
 
-            context->rectangle (
+            if (enabled) {
 
-                position.getX () - (originX * dimensions.getWidth ()), 
-                position.getY () - (originY * dimensions.getHeight ()), 
+                context->rectangle (
 
-                dimensions.getWidth (), 
-                dimensions.getHeight ()
-            );            
+                    position.getX () - (originX * dimensions.getWidth ()), 
+                    position.getY () - (originY * dimensions.getHeight ()), 
 
-            if (!fill.isNull ()) {
+                    dimensions.getWidth (), 
+                    dimensions.getHeight ()
+                );            
+
+                if (!fill.isNull ()) {
+                    context->set_source_rgba (
+                        fill.getColor ().r (),
+                        fill.getColor ().g (),
+                        fill.getColor ().b (),
+                        fill.getColor ().a ()
+                    );
+                    context->fill_preserve ();
+                }
+
+                if (!stroke.isNull ()) {
+                    context->set_source_rgba (
+                        stroke.getColor ().r (),
+                        stroke.getColor ().g (),
+                        stroke.getColor ().b (),
+                        stroke.getColor ().a ()
+                    );
+                    context->set_line_width (stroke.getWidth ());
+                    context->stroke ();
+                }
+            
+            } else {
+
                 context->set_source_rgba (
-                    fill.getColor ().r (),
-                    fill.getColor ().g (),
-                    fill.getColor ().b (),
-                    fill.getColor ().a ()
+                    1, 1, 1, 0
                 );
                 context->fill_preserve ();
+
+                context->set_source_rgba (
+                    1, 1, 1, 0
+                );
+                context->set_line_width (0);
+
             }
 
-            if (!stroke.isNull ()) {
-                context->set_source_rgba (
-                    stroke.getColor ().r (),
-                    stroke.getColor ().g (),
-                    stroke.getColor ().b (),
-                    stroke.getColor ().a ()
-                );
-                context->set_line_width (stroke.getWidth ());
-                context->stroke ();
-            }
-            
         }
 
         bool isPointInsideShape (int x, int y) {
@@ -709,24 +733,40 @@ class Polygon : public Shape {
 
         void draw (const Cairo::RefPtr<Cairo::Context>& context) {
 
-            context->move_to (vertices[0].getX (), vertices[0].getY ());
+            if (enabled) {
 
-            for (int i = 1; i < vertices.size (); i++) {
-                context->line_to (vertices[i].getX(), vertices[i].getY ());
-            }
+                context->move_to (vertices[0].getX (), vertices[0].getY ());
 
-            context->line_to (vertices[0].getX (), vertices[0].getY ());
+                for (int i = 1; i < vertices.size (); i++) {
+                    context->line_to (vertices[i].getX(), vertices[i].getY ());
+                }
 
-            context->stroke_preserve ();
+                context->line_to (vertices[0].getX (), vertices[0].getY ());
 
-            if (!fill.isNull ()) {
-                context->set_source_rgba (
-                    fill.getColor ().r (),
-                    fill.getColor ().g (),
-                    fill.getColor ().b (),
-                    fill.getColor ().a ()
-                );
-                context->fill ();
+                context->stroke_preserve ();
+
+                if (!fill.isNull ()) {
+                    context->set_source_rgba (
+                        fill.getColor ().r (),
+                        fill.getColor ().g (),
+                        fill.getColor ().b (),
+                        fill.getColor ().a ()
+                    );
+                    context->fill ();
+                } else {
+
+                    context->set_source_rgba (
+                        1, 1, 1, 0
+                    );
+                    context->fill_preserve ();
+
+                    context->set_source_rgba (
+                        1, 1, 1, 0
+                    );
+                    context->set_line_width (0);
+
+                }
+
             }
 
         }

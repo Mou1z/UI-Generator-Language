@@ -502,10 +502,12 @@ class Path {
 
 class Shape { 
 
-    private:
+    protected:
 
         int z_index;
         string type;
+
+        bool enabled;
 
     public:
 
@@ -516,11 +518,17 @@ class Shape {
             this->z_index = indices;
             cout << indices << endl;
             indices++;
+            enabled = true;
         }
 
         Shape (int z_index, int change = 0) {
             this->z_index = z_index;
             indices += change;
+            enabled = true;
+        }
+
+        void setEnable (bool val) {
+            this->enabled = val;
         }
 
         int get_z_index () {
@@ -590,36 +598,52 @@ class Rectangle : public Shape {
 
         void draw (const Cairo::RefPtr<Cairo::Context>& context) {
 
-            context->rectangle (
+            if (enabled) {
 
-                position.getX () - (originX * dimensions.getWidth ()), 
-                position.getY () - (originY * dimensions.getHeight ()), 
+                context->rectangle (
 
-                dimensions.getWidth (), 
-                dimensions.getHeight ()
-            );            
+                    position.getX () - (originX * dimensions.getWidth ()), 
+                    position.getY () - (originY * dimensions.getHeight ()), 
 
-            if (!fill.isNull ()) {
+                    dimensions.getWidth (), 
+                    dimensions.getHeight ()
+                );            
+
+                if (!fill.isNull ()) {
+                    context->set_source_rgba (
+                        fill.getColor ().r (),
+                        fill.getColor ().g (),
+                        fill.getColor ().b (),
+                        fill.getColor ().a ()
+                    );
+                    context->fill_preserve ();
+                }
+
+                if (!stroke.isNull ()) {
+                    context->set_source_rgba (
+                        stroke.getColor ().r (),
+                        stroke.getColor ().g (),
+                        stroke.getColor ().b (),
+                        stroke.getColor ().a ()
+                    );
+                    context->set_line_width (stroke.getWidth ());
+                    context->stroke ();
+                }
+            
+            } else {
+
                 context->set_source_rgba (
-                    fill.getColor ().r (),
-                    fill.getColor ().g (),
-                    fill.getColor ().b (),
-                    fill.getColor ().a ()
+                    1, 1, 1, 0
                 );
                 context->fill_preserve ();
+
+                context->set_source_rgba (
+                    1, 1, 1, 0
+                );
+                context->set_line_width (0);
+
             }
 
-            if (!stroke.isNull ()) {
-                context->set_source_rgba (
-                    stroke.getColor ().r (),
-                    stroke.getColor ().g (),
-                    stroke.getColor ().b (),
-                    stroke.getColor ().a ()
-                );
-                context->set_line_width (stroke.getWidth ());
-                context->stroke ();
-            }
-            
         }
 
         bool isPointInsideShape (int x, int y) {
@@ -710,24 +734,40 @@ class Polygon : public Shape {
 
         void draw (const Cairo::RefPtr<Cairo::Context>& context) {
 
-            context->move_to (vertices[0].getX (), vertices[0].getY ());
+            if (enabled) {
 
-            for (int i = 1; i < vertices.size (); i++) {
-                context->line_to (vertices[i].getX(), vertices[i].getY ());
-            }
+                context->move_to (vertices[0].getX (), vertices[0].getY ());
 
-            context->line_to (vertices[0].getX (), vertices[0].getY ());
+                for (int i = 1; i < vertices.size (); i++) {
+                    context->line_to (vertices[i].getX(), vertices[i].getY ());
+                }
 
-            context->stroke_preserve ();
+                context->line_to (vertices[0].getX (), vertices[0].getY ());
 
-            if (!fill.isNull ()) {
-                context->set_source_rgba (
-                    fill.getColor ().r (),
-                    fill.getColor ().g (),
-                    fill.getColor ().b (),
-                    fill.getColor ().a ()
-                );
-                context->fill ();
+                context->stroke_preserve ();
+
+                if (!fill.isNull ()) {
+                    context->set_source_rgba (
+                        fill.getColor ().r (),
+                        fill.getColor ().g (),
+                        fill.getColor ().b (),
+                        fill.getColor ().a ()
+                    );
+                    context->fill ();
+                } else {
+
+                    context->set_source_rgba (
+                        1, 1, 1, 0
+                    );
+                    context->fill_preserve ();
+
+                    context->set_source_rgba (
+                        1, 1, 1, 0
+                    );
+                    context->set_line_width (0);
+
+                }
+
             }
 
         }
@@ -905,9 +945,12 @@ class Image : public Rectangle {
 };
 
 
-Rectangle r1 (Coordinate ("50%", "50%"), Dimensions ("100px", "100px"), 0.5, 0.5, StrokeData (1, Color32 ("#000000FF")), FillData (Color32 ("#FF0000FF")));
-Path p1 ({ Coordinate ("50%", "50%"), Coordinate ("75%", "75%"), Coordinate ("25%", "75%"), Coordinate ("50%", "50%") }, StrokeData (1, Color32 ("#000000FF")));
+Rectangle r1 (Coordinate ("50%", "50%"), Dimensions ("25px", "25px"), 0.5, 0.5, StrokeData (1, Color32 ("#000000FF")), FillData (Color32 ("#FF0000FF")));
 Rectangle cursor (Coordinate ("0px", "0px"), Dimensions ("10px", "10px"), 0.5, 0.5, StrokeData (1, Color32 ("#000000FF")), FillData (Color32 ("#000000FF")));
+Line l1 (Coordinate ("0px", "0px"), Coordinate ("0px", "0px"), StrokeData (1, Color32 ("#000000FF")));
+int  speed = 1;
+int  startX = 50;
+int  startY = 50;
 
 
 void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
@@ -915,8 +958,8 @@ void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int hei
 
     
 r1.draw (cr);
-p1.draw (cr);
 cursor.draw (cr);
+l1.draw (cr);
 
 }
 
@@ -959,7 +1002,9 @@ void onShapeClick (Canvas& canvas, Shape& shape) {
 
 bool mainWindow::onKeyPress (guint keyval, guint keycode, Gdk::ModifierType state) {
     
-if (keyval == 49) {  r1.getFillData ()->setColor (Color32 ("#FF0000FF")); }if (keyval == 50) {  r1.getFillData ()->setColor (Color32 ("#00FF00FF")); }if (keyval == 51) {  r1.getFillData ()->setColor (Color32 ("#0000FFFF")); }
+if (keyval == 49) {   speed = 1; }if (keyval == 50) {   speed = 2; }if (keyval == 51) {   speed = 4; }if (keyval == 65361) {   startX -= speed; r1.set_position_x (to_string (startX) + "%"); }if (keyval == 65362) {   startY -= speed; r1.set_position_y (to_string (startY) + "%"); }if (keyval == 65363) {   startX += speed; r1.set_position_x (to_string (startX) + "%"); }if (keyval == 65364) {   startY += speed; r1.set_position_y (to_string (startY) + "%"); }
+l1.set_start_x (to_string (startX) + "%");
+l1.set_start_y (to_string (startY) + "%");
 canvas.queue_draw ();
     return true;
 }
@@ -973,14 +1018,16 @@ void Canvas::onMouseMove (double x, double y) {
     
 cursor.set_position_y (to_string (y) + "px");
 cursor.set_position_x (to_string (x) + "px");
+l1.set_start_x (to_string (startX) + "%");
+l1.set_start_y (to_string (startY) + "%");
+l1.set_end_x (to_string (x) + "px");
+l1.set_end_y (to_string (y) + "px");
 queue_draw ();
 }
 
 void onMouseClick (Canvas& canvas, int clicks, double x, double y) {
 
     
-r1.getFillData ()->setColor (Color32 ("#0000FFFF"));
-canvas.queue_draw ();
 
     int max = -1;
     for (int i = 0; i < Shape::CreatedShapes.size (); i++) {
@@ -1003,10 +1050,16 @@ canvas.queue_draw ();
 void Canvas::onMouseDown (int n_press, double x, double y) {
     onMouseClick (*this, n_press, x, y);
     
+l1.getStrokeData ()->setColor (Color32 ("#FF0000FF"));
+l1.getStrokeData ()->setWidth (2);
+queue_draw ();
 }
 
 void Canvas::onMouseUp (int n_press, double x, double y) {
     
+l1.getStrokeData ()->setColor (Color32 ("#000000FF"));
+l1.getStrokeData ()->setWidth (1);
+queue_draw ();
 }
 
 ////////////////////////////////////////////////////////////////////////

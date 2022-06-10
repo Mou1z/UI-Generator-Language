@@ -81,7 +81,9 @@ string strip (string input) {
 
 enum {
     CREATE,
-    UPDATE
+    UPDATE,
+    VAR,
+    SET
 };
 
 // Element Types Enumerator
@@ -151,6 +153,8 @@ string eventsCode [9] = { "" };
 int getCommandID (string commandName) {
     if (commandName == "CREATE") return CREATE;
     if (commandName == "UPDATE") return UPDATE;
+    if (commandName == "VAR") return VAR;
+    if (commandName == "SET") return SET;
     return -1;
 }
 
@@ -493,7 +497,7 @@ string getElementName (string command) {
     return "";
 }
 
-string processCommand (string command, int lineNumber) {
+string processCommand (string command, int lineNumber, bool inEvent) {
     string outputStatement = "";
     switch (getCommandID (removeWhitespace (command.substr (0, command.find (" "))))) {
         case CREATE: {
@@ -519,7 +523,7 @@ string processCommand (string command, int lineNumber) {
                     break;
                 }
             }
-            if (!found) {
+            if (!found && match[1]) {
                 cout << "ERROR: Target element " << match[1] << " at line " << lineNumber << " is not defined. ";
                 break;
             } else {
@@ -529,6 +533,15 @@ string processCommand (string command, int lineNumber) {
                 return generatedCode;
             }
             break;
+        }
+        case VAR: {
+            string generatedCode = "int " + command.substr (command.find (" "), command.length ()) + ";";
+            eventsCode[creationCode] += "\n" + generatedCode;
+            return generatedCode;
+        }
+        case SET: {
+            string generatedCode = command.substr (command.find (" "), command.length ()) + ";";
+            return generatedCode;
         }
         default: {
             cout << "INVALID COMMAND TYPE: " << command << endl;
@@ -562,14 +575,14 @@ string processEvent (string lineBlock, int lineNumber, int eventLines) {
                 i--;
                 continue;
             } else {
-                conditionalCode += " " + processCommand (lines[i], startingLine + i);
+                conditionalCode += " " + processCommand (lines[i], startingLine + i, true);
             }
         } else {
             if (isConditional (lines[i])) {
                 readingConditional = true;
                 conditionalCode = "if (" + strip (lines[i].substr (lines[i].find (" "), lines[i].length ())) + ") { ";
             } else if (isValidCommand (lines[i])) {
-                eventCode += (eventCode == "" ? "" : "\n" ) + processCommand (lines[i], startingLine + i);
+                eventCode += (eventCode == "" ? "" : "\n" ) + processCommand (lines[i], startingLine + i, true);
             }
         }
     }
@@ -621,7 +634,7 @@ int main () {
                 lineBlock = "";
             } else {
                 if (isValidCommand (line)) {
-                    processCommand (line, lineNumber);
+                    processCommand (line, lineNumber, false);
                 } else if (isValidEvent (line)) {
                     lineBlock = line;
                     readingEvent = true;
