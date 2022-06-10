@@ -243,6 +243,10 @@ class FillData {
             return fileName;
         }
 
+        void setColor (Color32 color) {
+            this->color = color;
+        }
+
 };
 
 class StrokeData {
@@ -273,6 +277,14 @@ class StrokeData {
 
         Color32 getColor () {
             return color;
+        }
+
+        void setWidth (int width) {
+            this->width = width;
+        }
+
+        void setColor (Color32 color) {
+            this->color = color;
         }
 
 };
@@ -398,20 +410,32 @@ class Line {
             return end;
         }
 
+        void setStart (Coordinate newStart) {
+            this->start = newStart;
+        }
+
+        void setEnd (Coordinate newEnd) {
+            this->end = newEnd;
+        }
+
         void set_start_x (string x) {
-            start.setX (x);
+            this->start.setX (x);
         }
 
         void set_start_y (string y) {
-            start.setY (y);
+            this->start.setY (y);
         }
 
         void set_end_x (string x) {
-            end.setX (x);
+            this->end.setX (x);
         }
 
         void set_end_y (string y) {
-            end.setY (y);
+            this->end.setY (y);
+        }
+
+        StrokeData * getStrokeData () {
+            return &this->stroke;
         }
 
 };
@@ -461,12 +485,16 @@ class Path {
             points.push_back (newPoint);
         }
 
-        void set_point_x (int point, string x) {
-            points[i].setX (x);
+        void set_point_x (int i, string x) {
+            this->points[i].setX (x);
         }
 
-        void set_point_y (int point, string y) {
-            points[i].setY (y);
+        void set_point_y (int i, string y) {
+            this->points[i].setY (y);
+        }
+
+        StrokeData * getStrokeData () {
+            return &this->stroke;
         }
 
 };
@@ -502,8 +530,16 @@ class Shape {
             this->z_index = z_index;
         }
 
-        virtual string getType () = 0;
-        virtual bool isPointInsideShape (int x, int y) = 0;
+        virtual bool isPointInsideShape (int x, int y) {
+            cout << "Shape: Empty Method Called => isPointInsideShape ()" << endl;
+            return false;
+        }
+
+        virtual string getType () {
+            return "None";
+        }
+
+        virtual void draw (const Cairo::RefPtr<Cairo::Context>& context) = 0;
 
 };
 
@@ -524,8 +560,6 @@ class Rectangle : public Shape {
         FillData fill;
 
     public:
-
-        
 
         Rectangle (
             
@@ -557,8 +591,8 @@ class Rectangle : public Shape {
 
             context->rectangle (
 
-                position.getX () - (originX * windowData::width), 
-                position.getY () - (originY * windowData::height), 
+                position.getX () - (originX * dimensions.getWidth ()), 
+                position.getY () - (originY * dimensions.getHeight ()), 
 
                 dimensions.getWidth (), 
                 dimensions.getHeight ()
@@ -589,8 +623,9 @@ class Rectangle : public Shape {
 
         bool isPointInsideShape (int x, int y) {
 
-            float pivotX = (originX * windowData::width);
-            float pivotY = (originY * windowData::height);
+            // Look at these two lines first if there's any problem in the function.
+            float pivotX = (originX * dimensions.getWidth ());
+            float pivotY = (originY * dimensions.getHeight ());
 
             if (
                 (position.getX () - pivotX) <= x && x <= (position.getX () + dimensions.getWidth () - pivotX)
@@ -609,6 +644,38 @@ class Rectangle : public Shape {
 
         string getType () {
             return "Rectangle";
+        }
+
+        void set_position_x (string x) {
+            this->position.setX (x);
+        }
+
+        void set_position_y (string y) {
+            this->position.setY (y);
+        }
+
+        void set_width (string width) {
+            this->dimensions.setWidth (width);
+        }
+
+        void set_height (string height) {
+            this->dimensions.setHeight (height);
+        }
+
+        void set_origin_x (float originX) {
+            this->originX = originX;
+        }
+
+        void set_origin_y (float originY) {
+            this->originY = originY;
+        }
+
+        StrokeData * getStrokeData () {
+            return &this->stroke;
+        }
+
+        FillData * getFillData () {
+            return &this->fill;
         }
 
 };
@@ -689,6 +756,13 @@ class Polygon : public Shape {
             return "Polygon";
         }
 
+        StrokeData * getStrokeData () {
+            return &this->stroke;
+        }
+
+        FillData * getFillData () {
+            return & this->fill;
+        }
 };
 
 // 
@@ -749,6 +823,34 @@ class Arc {
 
         }
 
+        void set_position_x (string x) {
+            this->position.setX (x);
+        }
+
+        void set_position_y (string y) {
+            this->position.setY (y);
+        }
+
+        void set_radius (float radius) {
+            this->radius = radius;
+        }
+
+        void set_angle_start (float startAngle) {
+            this->startAngle = startAngle;
+        }
+
+        void set_angle_end (float endAngle) {
+            this->endAngle = endAngle;
+        }
+
+        StrokeData * getStrokeData () {
+            return &this->stroke;
+        }
+
+        FillData * getFillData () {
+            return &this->fill;
+        }
+
 };
 
 class Image : public Rectangle {
@@ -802,6 +904,7 @@ class Image : public Rectangle {
 };
 
 // {creationCode}
+
 
 void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
     windowData::updateWindowSizeData (width, height);
@@ -857,12 +960,13 @@ void mainWindow::onKeyRelease (guint keyval, guint keycode, Gdk::ModifierType st
 }
 
 void Canvas::onMouseMove (double x, double y) {
+
     // {OnMouseMove}
 }
 
 void onMouseClick (Canvas& canvas, int clicks, double x, double y) {
 
-    // {onMouseClick}
+    // {OnMouseClick}
 
     int max = -1;
     for (int i = 0; i < Shape::CreatedShapes.size (); i++) {

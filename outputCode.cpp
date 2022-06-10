@@ -1,3 +1,4 @@
+
 /*
 
 > TODO
@@ -434,8 +435,8 @@ class Line {
             this->end.setY (y);
         }
 
-        StrokeData getStrokeData () {
-            return this->stroke;
+        StrokeData * getStrokeData () {
+            return &this->stroke;
         }
 
 };
@@ -493,8 +494,8 @@ class Path {
             this->points[i].setY (y);
         }
 
-        StrokeData getStrokeData () {
-            return this->stroke;
+        StrokeData * getStrokeData () {
+            return &this->stroke;
         }
 
 };
@@ -670,12 +671,12 @@ class Rectangle : public Shape {
             this->originY = originY;
         }
 
-        StrokeData getStrokeData () {
-            return this->stroke;
+        StrokeData * getStrokeData () {
+            return &this->stroke;
         }
 
-        FillData getFillData () {
-            return this->fill;
+        FillData * getFillData () {
+            return &this->fill;
         }
 
 };
@@ -756,12 +757,12 @@ class Polygon : public Shape {
             return "Polygon";
         }
 
-        StrokeData getStrokeData () {
-            return this->stroke;
+        StrokeData * getStrokeData () {
+            return &this->stroke;
         }
 
-        FillData getFillData () {
-            return this->fill;
+        FillData * getFillData () {
+            return & this->fill;
         }
 };
 
@@ -843,12 +844,12 @@ class Arc {
             this->endAngle = endAngle;
         }
 
-        StrokeData getStrokeData () {
-            return this->stroke;
+        StrokeData * getStrokeData () {
+            return &this->stroke;
         }
 
-        FillData getFillData () {
-            return this->fill;
+        FillData * getFillData () {
+            return &this->fill;
         }
 
 };
@@ -903,13 +904,19 @@ class Image : public Rectangle {
         
 };
 
-// {creationCode}
+
+Rectangle r1 (Coordinate ("50%", "50%"), Dimensions ("100px", "100px"), 0.5, 0.5, StrokeData (1, Color32 ("#000000FF")), FillData (Color32 ("#FF0000FF")));
+Path p1 ({ Coordinate ("50%", "50%"), Coordinate ("75%", "75%"), Coordinate ("25%", "75%"), Coordinate ("50%", "50%") }, StrokeData (1, Color32 ("#000000FF")));
+Rectangle cursor (Coordinate ("0px", "0px"), Dimensions ("10px", "10px"), 0.5, 0.5, StrokeData (1, Color32 ("#000000FF")), FillData (Color32 ("#000000FF")));
 
 
 void Canvas::onDraw (const Cairo::RefPtr<Cairo::Context>& cr, int width, int height) {
     windowData::updateWindowSizeData (width, height);
 
-    // {onDrawCode}
+    
+r1.draw (cr);
+p1.draw (cr);
+cursor.draw (cr);
 
 }
 
@@ -947,26 +954,33 @@ void onShapeClick (Canvas& canvas, Shape& shape) {
         
     }
     */
-    // {OnShapeClick}
+    
 }
 
 bool mainWindow::onKeyPress (guint keyval, guint keycode, Gdk::ModifierType state) {
-    // {OnKeyPress}
+    
+if (keyval == 49) {  r1.getFillData ()->setColor (Color32 ("#FF0000FF")); }if (keyval == 50) {  r1.getFillData ()->setColor (Color32 ("#00FF00FF")); }if (keyval == 51) {  r1.getFillData ()->setColor (Color32 ("#0000FFFF")); }
+canvas.queue_draw ();
     return true;
 }
 
 void mainWindow::onKeyRelease (guint keyval, guint keycode, Gdk::ModifierType state) {
-    // {OnKeyRelease}
+    
 }
 
 void Canvas::onMouseMove (double x, double y) {
 
-    // {OnMouseMove}
+    
+cursor.set_position_y (to_string (y) + "px");
+cursor.set_position_x (to_string (x) + "px");
+queue_draw ();
 }
 
 void onMouseClick (Canvas& canvas, int clicks, double x, double y) {
 
-    // {onMouseClick}
+    
+r1.getFillData ()->setColor (Color32 ("#0000FFFF"));
+canvas.queue_draw ();
 
     int max = -1;
     for (int i = 0; i < Shape::CreatedShapes.size (); i++) {
@@ -988,11 +1002,11 @@ void onMouseClick (Canvas& canvas, int clicks, double x, double y) {
 
 void Canvas::onMouseDown (int n_press, double x, double y) {
     onMouseClick (*this, n_press, x, y);
-    // {OnMouseDown}
+    
 }
 
 void Canvas::onMouseUp (int n_press, double x, double y) {
-    // {OnMouseUp}
+    
 }
 
 ////////////////////////////////////////////////////////////////////////
