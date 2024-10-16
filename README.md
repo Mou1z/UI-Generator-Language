@@ -1,7 +1,7 @@
 # UI Generator Language
 A wrapper language which translates to C++ code and utilized GTK/Cairo to draw shapes on the screen. The language supports variables, events and keybinds, making the output fairly interactive.
 
-
+### Example Script:
 ```
 CREATE `Rectangle` (top = 50%, left = 50%, width = 25px, height = 25px, origin_x = 0.5, origin_y = 0.5, fill_color = #FF0000FF) as `r1`
 CREATE `Rectangle` (top = 0px, left = 0px, width = 10px, height = 10px, origin_x = 0.5, origin_y = 0.5, fill_color = #000000FF) as `cursor`
