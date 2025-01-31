@@ -1,5 +1,5 @@
 # UI Generator Language
-A wrapper language which translates to C++ code and utilized GTK/Cairo to draw shapes on the screen. The language supports variables, events and keybinds, making the output fairly interactive.
+A wrapper language which translates to C++ code and utilizes GTK/Cairo to draw shapes on the screen. The language supports variables, events and keybinds, making the output program interactive.
 
 ### Example Script:
 ```
